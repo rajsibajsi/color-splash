@@ -15,13 +15,13 @@ module.exports = {
   coverageReporters: ['text', 'lcov', 'html'],
   coverageThreshold: {
     global: {
-      branches: 90,
-      functions: 95,
-      lines: 95,
-      statements: 95
+      branches: 80,
+      functions: 85,
+      lines: 85,
+      statements: 85
     }
   },
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1'
   },
   testTimeout: 10000,

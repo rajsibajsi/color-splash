@@ -60,7 +60,7 @@ jobs:
     - name: Configure package for GPR
       run: |
         cp package.json package.json.backup
-        sed 's/"@username\/color-splash"/"@${{ github.repository_owner }}\/color-splash"/g' package.json.backup > package.json
+        sed 's/"@rajsibajsi\/color-splash"/"@${{ github.repository_owner }}\/color-splash"/g' package.json.backup > package.json
 
     - name: Publish to GitHub Package Registry
       run: npm publish
