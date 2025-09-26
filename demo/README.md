@@ -22,6 +22,8 @@ A real-time web demonstration of the Color Splash library featuring drag-and-dro
    - Adjust tolerance settings in real-time
    - Apply preview or full resolution effects
 
+📖 **[View Detailed Instructions](INSTRUCTIONS.md)** for step-by-step tutorial, troubleshooting, and advanced usage tips.
+
 ## ✨ Features
 
 ### 🖼️ **Image Handling**
