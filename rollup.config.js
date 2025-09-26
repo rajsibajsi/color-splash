@@ -27,8 +27,27 @@ module.exports = [
   {
     input: 'src/index.ts',
     output: {
-      file: 'dist/index.js',
+      file: 'dist/index.cjs.js',
       format: 'cjs',
+      sourcemap: true
+    },
+    plugins: [
+      nodeResolve({
+        browser: true
+      }),
+      commonjs(),
+      typescript({
+        tsconfig: './tsconfig.json'
+      })
+    ]
+  },
+  // UMD build for browsers
+  {
+    input: 'src/index.ts',
+    output: {
+      file: 'dist/index.js',
+      format: 'umd',
+      name: 'ColorSplash',
       sourcemap: true
     },
     plugins: [

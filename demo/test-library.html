@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Splash Library Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Color Splash Library Test</h1>
+    <p>Testing the Color Splash library functionality in the browser environment.</p>
+
+    <div id="testResults"></div>
+
+    <canvas id="testCanvas" width="200" height="150"></canvas>
+
+    <script src="../dist/index.js"></script>
+    <script>
+        const testResults = document.getElementById('testResults');
+
+        function addResult(message, success = true) {
+            const div = document.createElement('div');
+            div.className = `test-result ${success ? 'success' : 'error'}`;
+            div.textContent = message;
+            testResults.appendChild(div);
+        }
+
+        function addInfo(message) {
+            const div = document.createElement('div');
+            div.className = 'test-result info';
+            div.textContent = message;
+            testResults.appendChild(div);
+        }
+
+        async function runTests() {
+            try {
+                addInfo('Starting Color Splash library tests...');
+
+                // Test 1: Library Loading
+                if (typeof ColorSplash !== 'undefined' && typeof ColorSplash.ColorSplash !== 'undefined') {
+                    addResult('✓ ColorSplash class loaded successfully');
+                } else {
+                    addResult('✗ ColorSplash class not found', false);
+                    return;
+                }
+
+                // Test 2: Color Space Constants
+                if (typeof ColorSplash.ColorSpace !== 'undefined') {
+                    addResult('✓ ColorSpace enum loaded');
+                    addInfo(`ColorSpace values: HSV=${ColorSplash.ColorSpace.HSV}, LAB=${ColorSplash.ColorSpace.LAB}, RGB=${ColorSplash.ColorSpace.RGB}`);
+                } else {
+                    addResult('✗ ColorSpace enum not found', false);
+                }
+
+                // Test 3: Preview Quality Constants
+                if (typeof ColorSplash.PreviewQuality !== 'undefined') {
+                    addResult('✓ PreviewQuality enum loaded');
+                    addInfo(`PreviewQuality values: LOW=${ColorSplash.PreviewQuality.LOW}, MEDIUM=${ColorSplash.PreviewQuality.MEDIUM}, HIGH=${ColorSplash.PreviewQuality.HIGH}, REALTIME=${ColorSplash.PreviewQuality.REALTIME}`);
+                } else {
+                    addResult('✗ PreviewQuality enum not found', false);
+                }
+
+                // Test 4: ColorSplash Initialization
+                const colorSplash = new ColorSplash.ColorSplash({
+                    previewQuality: ColorSplash.PreviewQuality.HIGH,
+                    defaultColorSpace: ColorSplash.ColorSpace.HSV,
+                    maxPreviewSize: 400
+                });
+                addResult('✓ ColorSplash instance created');
+
+                // Test 5: Create Test ImageData
+                const canvas = document.getElementById('testCanvas');
+                const ctx = canvas.getContext('2d');
+
+                // Draw a simple test pattern
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(0, 0, 100, 75);
+                ctx.fillStyle = '#00ff00';
+                ctx.fillRect(100, 0, 100, 75);
+                ctx.fillStyle = '#0000ff';
+                ctx.fillRect(0, 75, 100, 75);
+                ctx.fillStyle = '#ffff00';
+                ctx.fillRect(100, 75, 100, 75);
+
+                const imageData = ctx.getImageData(0, 0, 200, 150);
+                addResult('✓ Test ImageData created (200x150 color pattern)');
+
+                // Test 6: Color Selection
+                const selectedColor = colorSplash.selectColor(imageData, 50, 37); // Red area
+                addResult(`✓ Color selection: RGB(${selectedColor.r}, ${selectedColor.g}, ${selectedColor.b})`);
+
+                if (selectedColor.r > 200 && selectedColor.g < 50 && selectedColor.b < 50) {
+                    addResult('✓ Color selection accuracy verified (red detected)');
+                } else {
+                    addResult('⚠ Color selection may be inaccurate', false);
+                }
+
+                // Test 7: Fast Preview
+                addInfo('Creating fast preview...');
+                const startTime = performance.now();
+
+                const preview = await colorSplash.createFastPreview(
+                    imageData,
+                    [selectedColor],
+                    { hue: 20, saturation: 30, lightness: 25 },
+                    ColorSplash.PreviewQuality.HIGH
+                );
+
+                const duration = performance.now() - startTime;
+                addResult(`✓ Fast preview created in ${duration.toFixed(1)}ms`);
+                addResult(`✓ Preview size: ${preview.width}x${preview.height}`);
+
+                // Test 8: Full Resolution Processing
+                addInfo('Testing full resolution processing...');
+                const fullStart = performance.now();
+
+                const fullResult = await colorSplash.applyColorSplash(imageData, {
+                    targetColors: [selectedColor],
+                    tolerance: { hue: 20, saturation: 30, lightness: 25 },
+                    colorSpace: ColorSplash.ColorSpace.HSV,
+                    grayscaleMethod: ColorSplash.GrayscaleMethod.LUMINANCE
+                });
+
+                const fullDuration = performance.now() - fullStart;
+                addResult(`✓ Full resolution processing completed in ${fullDuration.toFixed(1)}ms`);
+
+                // Test 9: Performance Statistics
+                const stats = colorSplash.getPerformanceStats();
+                const cacheStats = colorSplash.getCacheStats();
+
+                addResult('✓ Performance statistics available');
+                addInfo(`Cache usage: ${cacheStats.size}/${cacheStats.maxSize} entries`);
+
+                Object.entries(stats).forEach(([operation, stat]) => {
+                    if (stat) {
+                        addInfo(`${operation}: avg ${stat.average}ms (${stat.count} calls)`);
+                    }
+                });
+
+                // Test 10: Standalone Functions
+                if (typeof ColorSplash.rgbToHsv !== 'undefined') {
+                    const hsvColor = ColorSplash.rgbToHsv(selectedColor);
+                    addResult(`✓ Standalone function test: HSV(${hsvColor.h.toFixed(1)}, ${hsvColor.s.toFixed(1)}, ${hsvColor.v.toFixed(1)})`);
+                } else {
+                    addResult('⚠ Standalone functions not available', false);
+                }
+
+                addResult('🎉 All tests completed successfully!');
+
+                // Display final result in canvas
+                ctx.putImageData(fullResult, 0, 0);
+                addInfo('Final result displayed in canvas above');
+
+            } catch (error) {
+                addResult(`✗ Test failed: ${error.message}`, false);
+                console.error('Test error:', error);
+            }
+        }
+
+        // Run tests when page loads
+        document.addEventListener('DOMContentLoaded', runTests);
+    </script>
+</body>
+</html>
