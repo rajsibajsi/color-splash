@@ -14,5 +14,8 @@ export { rgbToHsv, hsvToRgb, rgbToLab } from './algorithms/color-conversion';
 // Export color similarity algorithms
 export { isColorSimilar, calculateColorDistance } from './algorithms/color-similarity';
 
+// Export core image processing functions
+export { convertToGrayscale, extractColorMask, applyColorSplash } from './core/image-processing';
+
 // Main ColorSplash class will be exported here when implemented
 // export { ColorSplash } from './core/ColorSplash';
