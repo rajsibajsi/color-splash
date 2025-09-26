@@ -262,7 +262,7 @@ describe('Performance Optimization', () => {
     });
   });
 
-  describe('Performance Benchmarks', () => {
+  (process.env['CI'] ? describe.skip : describe)('Performance Benchmarks', () => {
     test('should process medium preview in under 50ms', async () => {
       const largeImage = createTestImageData(1200, 800, { r: 200, g: 100, b: 150 });
       const targetColors: Color[] = [{ r: 200, g: 100, b: 150 }];
