@@ -1,6 +1,6 @@
 {
   "name": "@rajsibajsi/color-splash",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A TypeScript library for creating color splash effects on images with real-time preview support. Preserve selected colors while converting others to grayscale, perfect for photo editing applications.",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
