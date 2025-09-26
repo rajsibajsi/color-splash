@@ -1,13 +1,24 @@
 {
-  "name": "color-splash",
-  "version": "0.1.0",
-  "description": "TypeScript library for creating color splash effects on images with real-time preview support",
+  "name": "@rajsibajsi/color-splash",
+  "version": "1.0.0",
+  "description": "A TypeScript library for creating color splash effects on images with real-time preview support. Preserve selected colors while converting others to grayscale, perfect for photo editing applications.",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
+  "browser": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.cjs.js",
+      "browser": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "files": [
-    "dist",
-    "README.md"
+    "dist/**/*",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "rollup -c",
@@ -19,7 +30,11 @@
     "lint:fix": "eslint src --ext .ts --fix",
     "type-check": "tsc --noEmit",
     "dev": "npm run build:watch",
-    "prepublishOnly": "npm run build && npm run test"
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean",
+    "prepublishOnly": "npm run build && npm run test && npm run type-check",
+    "demo": "cd demo && node serve.js",
+    "size-check": "npm run build && bundlesize"
   },
   "keywords": [
     "color-splash",
@@ -27,10 +42,33 @@
     "color-selection",
     "typescript",
     "canvas",
-    "webgl"
+    "webgl",
+    "photo-editing",
+    "image-effects",
+    "selective-color",
+    "real-time",
+    "preview",
+    "hsv",
+    "lab",
+    "rgb",
+    "grayscale",
+    "color-matching",
+    "performance-optimization"
   ],
-  "author": "",
+  "author": {
+    "name": "Luka Reisman",
+    "email": "luka.reisman@gmail.com",
+    "url": "https://github.com/rajsibajsi"
+  },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rajsibajsi/color-splash.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rajsibajsi/color-splash/issues"
+  },
+  "homepage": "https://github.com/rajsibajsi/color-splash#readme",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-node-resolve": "^15.0.0",

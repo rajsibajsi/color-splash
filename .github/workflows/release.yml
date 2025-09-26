@@ -1,0 +1,76 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run tests
+      run: npm run test
+
+    - name: Run type checking
+      run: npm run type-check
+
+    - name: Build package
+      run: npm run build
+
+    - name: Extract version from tag
+      id: version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+    - name: Generate changelog entries
+      id: changelog
+      run: |
+        VERSION=${{ steps.version.outputs.VERSION }}
+        echo "Extracting changelog for version v$VERSION"
+
+        # Extract changelog section for this version
+        awk "/## \[$VERSION\]/{flag=1; next} /## \[/{flag=0} flag" CHANGELOG.md > release_notes.md
+
+        if [ ! -s release_notes.md ]; then
+          echo "No changelog entries found for version v$VERSION" >> release_notes.md
+        fi
+
+        echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+        cat release_notes.md >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: ${{ steps.changelog.outputs.CHANGELOG }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./username-color-splash-${{ steps.version.outputs.VERSION }}.tgz
+        asset_name: color-splash-${{ steps.version.outputs.VERSION }}.tgz
+        asset_content_type: application/gzip
