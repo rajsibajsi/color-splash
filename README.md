@@ -2,6 +2,8 @@
 
 A powerful TypeScript library for creating stunning color splash effects on images with real-time preview support. Preserve selected colors while converting others to grayscale, perfect for highlighting specific elements in photographs.
 
+[![npm version](https://badge.fury.io/js/@rajsibajsi%2Fcolor-splash.svg)](https://badge.fury.io/js/@rajsibajsi%2Fcolor-splash)
+[![npm downloads](https://img.shields.io/npm/dm/@rajsibajsi/color-splash)](https://www.npmjs.com/package/@rajsibajsi/color-splash)
 [![Tests](https://img.shields.io/badge/tests-95%20passing-brightgreen)](https://github.com/rajsibajsi/color-splash)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
