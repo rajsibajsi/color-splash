@@ -69,7 +69,7 @@
                 addInfo('Starting Color Splash library tests...');
 
                 // Test 1: Library Loading
-                if (typeof window.ColorSplash !== 'undefined') {
+                if (typeof ColorSplash !== 'undefined' && typeof ColorSplash.ColorSplash !== 'undefined') {
                     addResult('✓ ColorSplash class loaded successfully');
                 } else {
                     addResult('✗ ColorSplash class not found', false);
@@ -77,25 +77,25 @@
                 }
 
                 // Test 2: Color Space Constants
-                if (typeof window.ColorSpace !== 'undefined') {
+                if (typeof ColorSplash.ColorSpace !== 'undefined') {
                     addResult('✓ ColorSpace enum loaded');
-                    addInfo(`ColorSpace values: HSV=${window.ColorSpace.HSV}, LAB=${window.ColorSpace.LAB}, RGB=${window.ColorSpace.RGB}`);
+                    addInfo(`ColorSpace values: HSV=${ColorSplash.ColorSpace.HSV}, LAB=${ColorSplash.ColorSpace.LAB}, RGB=${ColorSplash.ColorSpace.RGB}`);
                 } else {
                     addResult('✗ ColorSpace enum not found', false);
                 }
 
                 // Test 3: Preview Quality Constants
-                if (typeof window.PreviewQuality !== 'undefined') {
+                if (typeof ColorSplash.PreviewQuality !== 'undefined') {
                     addResult('✓ PreviewQuality enum loaded');
-                    addInfo(`PreviewQuality values: LOW=${window.PreviewQuality.LOW}, MEDIUM=${window.PreviewQuality.MEDIUM}, HIGH=${window.PreviewQuality.HIGH}, REALTIME=${window.PreviewQuality.REALTIME}`);
+                    addInfo(`PreviewQuality values: LOW=${ColorSplash.PreviewQuality.LOW}, MEDIUM=${ColorSplash.PreviewQuality.MEDIUM}, HIGH=${ColorSplash.PreviewQuality.HIGH}, REALTIME=${ColorSplash.PreviewQuality.REALTIME}`);
                 } else {
                     addResult('✗ PreviewQuality enum not found', false);
                 }
 
                 // Test 4: ColorSplash Initialization
-                const colorSplash = new window.ColorSplash({
-                    previewQuality: 2, // HIGH
-                    defaultColorSpace: 0, // HSV
+                const colorSplash = new ColorSplash.ColorSplash({
+                    previewQuality: ColorSplash.PreviewQuality.HIGH,
+                    defaultColorSpace: ColorSplash.ColorSpace.HSV,
                     maxPreviewSize: 400
                 });
                 addResult('✓ ColorSplash instance created');
@@ -135,7 +135,7 @@
                     imageData,
                     [selectedColor],
                     { hue: 20, saturation: 30, lightness: 25 },
-                    2 // HIGH quality
+                    ColorSplash.PreviewQuality.HIGH
                 );
 
                 const duration = performance.now() - startTime;
@@ -149,8 +149,8 @@
                 const fullResult = await colorSplash.applyColorSplash(imageData, {
                     targetColors: [selectedColor],
                     tolerance: { hue: 20, saturation: 30, lightness: 25 },
-                    colorSpace: 0, // HSV
-                    grayscaleMethod: 'luminance'
+                    colorSpace: ColorSplash.ColorSpace.HSV,
+                    grayscaleMethod: ColorSplash.GrayscaleMethod.LUMINANCE
                 });
 
                 const fullDuration = performance.now() - fullStart;
@@ -170,8 +170,8 @@
                 });
 
                 // Test 10: Standalone Functions
-                if (typeof window.rgbToHsv !== 'undefined') {
-                    const hsvColor = window.rgbToHsv(selectedColor);
+                if (typeof ColorSplash.rgbToHsv !== 'undefined') {
+                    const hsvColor = ColorSplash.rgbToHsv(selectedColor);
                     addResult(`✓ Standalone function test: HSV(${hsvColor.h.toFixed(1)}, ${hsvColor.s.toFixed(1)}, ${hsvColor.v.toFixed(1)})`);
                 } else {
                     addResult('⚠ Standalone functions not available', false);

@@ -428,18 +428,18 @@
                 <div class="control-row">
                     <label>Preview Quality:</label>
                     <select id="qualitySelect">
-                        <option value="0">LOW (Fastest)</option>
-                        <option value="1">MEDIUM</option>
-                        <option value="2" selected>HIGH</option>
-                        <option value="3">REALTIME</option>
+                        <option value="low">LOW (Fastest)</option>
+                        <option value="medium">MEDIUM</option>
+                        <option value="high" selected>HIGH</option>
+                        <option value="realtime">REALTIME</option>
                     </select>
                 </div>
                 <div class="control-row">
                     <label>Color Space:</label>
                     <select id="colorSpaceSelect">
-                        <option value="0" selected>HSV (Recommended)</option>
-                        <option value="1">LAB (Perceptual)</option>
-                        <option value="2">RGB (Simple)</option>
+                        <option value="hsv" selected>HSV (Recommended)</option>
+                        <option value="lab">LAB (Perceptual)</option>
+                        <option value="rgb">RGB (Simple)</option>
                     </select>
                 </div>
             </div>
@@ -495,9 +495,9 @@
             ctx = canvas.getContext('2d');
 
             // Initialize ColorSplash with high performance settings
-            colorSplash = new window.ColorSplash({
-                previewQuality: 2, // HIGH
-                defaultColorSpace: 0, // HSV
+            colorSplash = new ColorSplash.ColorSplash({
+                previewQuality: ColorSplash.PreviewQuality.HIGH,
+                defaultColorSpace: ColorSplash.ColorSpace.HSV,
                 maxPreviewSize: 800
             });
 
@@ -657,8 +657,8 @@
                     lightness: parseInt(document.getElementById('lightRange').value)
                 };
 
-                const quality = parseInt(document.getElementById('qualitySelect').value);
-                const colorSpace = parseInt(document.getElementById('colorSpaceSelect').value);
+                const quality = document.getElementById('qualitySelect').value;
+                const colorSpace = document.getElementById('colorSpaceSelect').value;
 
                 // Update ColorSplash settings
                 colorSplash.setPreviewQuality(quality);
@@ -701,13 +701,13 @@
                     lightness: parseInt(document.getElementById('lightRange').value)
                 };
 
-                const colorSpace = parseInt(document.getElementById('colorSpaceSelect').value);
+                const colorSpace = document.getElementById('colorSpaceSelect').value;
 
                 const result = await colorSplash.applyColorSplash(originalImageData, {
                     targetColors: [selectedColor],
                     tolerance: tolerance,
                     colorSpace: colorSpace,
-                    grayscaleMethod: 'luminance'
+                    grayscaleMethod: ColorSplash.GrayscaleMethod.LUMINANCE
                 });
 
                 // Draw result to canvas
