@@ -1,0 +1,124 @@
+name: Draft Release
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  draft-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history for changelog generation
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run tests
+      run: npm run test
+
+    - name: Run type checking
+      run: npm run type-check
+
+    - name: Build package
+      run: npm run build
+
+    - name: Get current version
+      id: current_version
+      run: |
+        VERSION=$(node -p "require('./package.json').version")
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "Current version: $VERSION"
+
+    - name: Check if release already exists
+      id: check_release
+      run: |
+        if gh release view "v${{ steps.current_version.outputs.VERSION }}" --repo ${{ github.repository }} >/dev/null 2>&1; then
+          echo "EXISTS=true" >> $GITHUB_OUTPUT
+          echo "Release v${{ steps.current_version.outputs.VERSION }} already exists"
+        else
+          echo "EXISTS=false" >> $GITHUB_OUTPUT
+          echo "Release v${{ steps.current_version.outputs.VERSION }} does not exist"
+        fi
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Generate release notes
+      if: steps.check_release.outputs.EXISTS == 'false'
+      id: release_notes
+      run: |
+        VERSION=${{ steps.current_version.outputs.VERSION }}
+
+        # Extract changelog for current version
+        echo "## 📋 Changes in v$VERSION" > release_notes.md
+        echo "" >> release_notes.md
+
+        # Try to extract from CHANGELOG.md
+        if awk "/## \[$VERSION\]/{flag=1; next} /## \[/{flag=0} flag" CHANGELOG.md | grep -q .; then
+          awk "/## \[$VERSION\]/{flag=1; next} /## \[/{flag=0} flag" CHANGELOG.md >> release_notes.md
+        else
+          # Fallback: generate from recent commits
+          echo "### Recent Changes" >> release_notes.md
+          echo "" >> release_notes.md
+
+          # Get commits since last tag (or last 10 if no tags)
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$LAST_TAG" ]; then
+            git log $LAST_TAG..HEAD --oneline --pretty=format:"- %s" >> release_notes.md
+          else
+            git log -10 --oneline --pretty=format:"- %s" >> release_notes.md
+          fi
+        fi
+
+        echo "" >> release_notes.md
+        echo "## 🚀 Installation" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "\`\`\`bash" >> release_notes.md
+        echo "npm install @rajsibajsi/color-splash" >> release_notes.md
+        echo "\`\`\`" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "## 📦 Assets" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "- **Bundle Size**: ~30KB uncompressed, ~7KB gzipped" >> release_notes.md
+        echo "- **Formats**: ES modules, CommonJS, UMD" >> release_notes.md
+        echo "- **TypeScript**: Full type definitions included" >> release_notes.md
+
+        # Store release notes in output
+        echo "NOTES<<EOF" >> $GITHUB_OUTPUT
+        cat release_notes.md >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: Create package for release asset
+      if: steps.check_release.outputs.EXISTS == 'false'
+      run: npm pack
+
+    - name: Create draft release
+      if: steps.check_release.outputs.EXISTS == 'false'
+      run: |
+        gh release create "v${{ steps.current_version.outputs.VERSION }}" \
+          ./rajsibajsi-color-splash-${{ steps.current_version.outputs.VERSION }}.tgz \
+          --draft \
+          --title "v${{ steps.current_version.outputs.VERSION }}" \
+          --notes-file release_notes.md \
+          --repo ${{ github.repository }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Comment on triggering commits
+      if: steps.check_release.outputs.EXISTS == 'false'
+      run: |
+        echo "🎉 Draft release v${{ steps.current_version.outputs.VERSION }} has been created!"
+        echo "📝 Review and publish: ${{ github.server_url }}/${{ github.repository }}/releases"
+        echo "📦 Package ready for: npm publish --access public"

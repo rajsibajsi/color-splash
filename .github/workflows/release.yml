@@ -54,23 +54,14 @@ jobs:
         cat release_notes.md >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
 
+    - name: Create package for release
+      run: npm pack
+
     - name: Create Release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v1
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
+        name: Release v${{ steps.version.outputs.VERSION }}
         body: ${{ steps.changelog.outputs.CHANGELOG }}
+        files: rajsibajsi-color-splash-${{ steps.version.outputs.VERSION }}.tgz
         draft: false
         prerelease: false
-
-    - name: Upload Release Assets
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./username-color-splash-${{ steps.version.outputs.VERSION }}.tgz
-        asset_name: color-splash-${{ steps.version.outputs.VERSION }}.tgz
-        asset_content_type: application/gzip
