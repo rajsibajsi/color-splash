@@ -17,5 +17,8 @@ export { isColorSimilar, calculateColorDistance } from './algorithms/color-simil
 // Export core image processing functions
 export { convertToGrayscale, extractColorMask, applyColorSplash } from './core/image-processing';
 
-// Main ColorSplash class will be exported here when implemented
-// export { ColorSplash } from './core/ColorSplash';
+// Export performance optimization functions
+export { createFastPreview, resizeImageData, calculateOptimalPreviewSize } from './core/performance-optimization';
+
+// Export main ColorSplash class
+export { ColorSplash } from './core/ColorSplash';
