@@ -116,5 +116,5 @@ export interface ColorAnalysis {
 
 export interface AreaProcessor {
   isPointInArea(x: number, y: number, area: SelectionArea): boolean;
-  applyFeathering(mask: boolean[], featherRadius: number): number[];
+  applyFeathering(mask: boolean[], featherRadius: number, width: number, height: number): number[];
 }
