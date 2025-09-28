@@ -48,3 +48,6 @@ export {
   type ImageLoadOptions,
   type ImageSaveOptions,
 } from './core/file-io-backend';
+
+// Export WebGL backend for advanced users
+export { WebGLBackend } from './core/webgl-backend';
