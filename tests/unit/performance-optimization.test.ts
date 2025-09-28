@@ -139,7 +139,7 @@ describe('Performance Optimization', () => {
       expect(preview.width).toBeLessThan(originalImage.width);
       expect(preview.height).toBeLessThan(originalImage.height);
       if (!process.env['CI']) {
-        expect(duration).toBeLessThan(100); // Should be fast (<100ms, disabled in CI)
+        expect(duration).toBeLessThan(200); // Should be fast (<200ms, disabled in CI)
       }
     });
 

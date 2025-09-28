@@ -288,6 +288,38 @@ describe('ColorSplash Class', () => {
 
       expect(duration).toBeGreaterThan(10); // Should take some time since no cache
     });
+
+    test('should provide cache statistics', () => {
+      const colorSplash = new ColorSplash();
+      const stats = colorSplash.getCacheStats();
+
+      expect(stats).toHaveProperty('size');
+      expect(stats).toHaveProperty('maxSize');
+      expect(typeof stats.size).toBe('number');
+      expect(typeof stats.maxSize).toBe('number');
+    });
+
+    test('should clear performance statistics', () => {
+      const colorSplash = new ColorSplash();
+
+      // Clear stats
+      colorSplash.clearPerformanceStats();
+
+      const stats = colorSplash.getPerformanceStats();
+      expect(stats).toBeDefined();
+    });
+
+    test('should enable GPU acceleration', async () => {
+      const colorSplash = new ColorSplash();
+
+      // Create a mock canvas
+      const canvas = document.createElement('canvas');
+
+      // Try to enable GPU acceleration (may fail in test environment)
+      const result = await colorSplash.enableGPUAcceleration(canvas);
+
+      expect(typeof result).toBe('boolean');
+    });
   });
 
   describe('Error Handling', () => {
@@ -325,6 +357,92 @@ describe('ColorSplash Class', () => {
       );
 
       expect(result).toBeDefined();
+    });
+  });
+
+  describe('Selection Area Integration', () => {
+    test('should create selection masks', () => {
+      const colorSplash = new ColorSplash();
+      const area = {
+        type: 'rectangle' as const,
+        coordinates: [
+          { x: 0, y: 0 },
+          { x: 50, y: 50 },
+        ],
+      };
+
+      const mask = colorSplash.createSelectionMask(100, 100, area);
+      expect(mask).toBeDefined();
+      expect(mask.length).toBe(10000);
+    });
+
+    test('should create alpha masks', () => {
+      const colorSplash = new ColorSplash();
+      const area = {
+        type: 'circle' as const,
+        coordinates: [
+          { x: 25, y: 25 },
+          { x: 50, y: 25 },
+        ],
+      };
+
+      const alphaMask = colorSplash.createAlphaMask(50, 50, area);
+      expect(alphaMask).toBeDefined();
+      expect(alphaMask.length).toBe(2500);
+    });
+
+    test('should check point in area', () => {
+      const colorSplash = new ColorSplash();
+      const area = {
+        type: 'rectangle' as const,
+        coordinates: [
+          { x: 10, y: 10 },
+          { x: 40, y: 40 },
+        ],
+      };
+
+      expect(colorSplash.isPointInArea(25, 25, area)).toBe(true);
+      expect(colorSplash.isPointInArea(5, 5, area)).toBe(false);
+    });
+
+    test('should apply selection to image data', () => {
+      const colorSplash = new ColorSplash();
+      const imageData = createTestImageData(50, 50);
+      const area = {
+        type: 'rectangle' as const,
+        coordinates: [
+          { x: 10, y: 10 },
+          { x: 40, y: 40 },
+        ],
+      };
+
+      const result = colorSplash.applySelectionToImageData(imageData, area);
+      expect(result).toBeDefined();
+      expect(result.width).toBe(50);
+      expect(result.height).toBe(50);
+    });
+
+    test('should apply color splash in selection area', async () => {
+      const colorSplash = new ColorSplash();
+      const imageData = createTestImageData(50, 50);
+      const area = {
+        type: 'rectangle' as const,
+        coordinates: [
+          { x: 10, y: 10 },
+          { x: 40, y: 40 },
+        ],
+      };
+      const config = {
+        targetColors: [{ r: 128, g: 128, b: 128 }],
+        tolerance: { hue: 15, saturation: 20, lightness: 25 },
+        colorSpace: ColorSpace.HSV,
+        grayscaleMethod: GrayscaleMethod.LUMINANCE,
+      };
+
+      const result = await colorSplash.applyColorSplashInSelection(imageData, area, config);
+      expect(result).toBeDefined();
+      expect(result.width).toBe(50);
+      expect(result.height).toBe(50);
     });
   });
 });
