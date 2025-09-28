@@ -317,4 +317,179 @@ describe('ColorSplash Class', () => {
       expect(result).toBeDefined();
     });
   });
+
+  describe('GPU Acceleration', () => {
+    // Mock canvas for testing
+    const createMockCanvas = () => ({
+      width: 100,
+      height: 100,
+      getContext: (type: string) => {
+        if (type === 'webgl' || type === 'webgl2') {
+          return {
+            // Mock WebGL context with minimal required methods
+            createShader: () => ({}),
+            shaderSource: () => {},
+            compileShader: () => {},
+            getShaderParameter: () => true,
+            getShaderInfoLog: () => '',
+            createProgram: () => ({}),
+            attachShader: () => {},
+            linkProgram: () => {},
+            getProgramParameter: () => true,
+            getProgramInfoLog: () => '',
+            getUniformLocation: () => ({}),
+            getAttribLocation: () => 0,
+            createBuffer: () => ({}),
+            bindBuffer: () => {},
+            bufferData: () => {},
+            createTexture: () => ({}),
+            bindTexture: () => {},
+            texParameteri: () => {},
+            texImage2D: () => {},
+            useProgram: () => {},
+            enableVertexAttribArray: () => {},
+            vertexAttribPointer: () => {},
+            activeTexture: () => {},
+            uniform1i: () => {},
+            uniform3f: () => {},
+            uniform3fv: () => {},
+            viewport: () => {},
+            drawArrays: () => {},
+            readPixels: (_x: number, _y: number, _width: number, _height: number, _format: number, _type: number, pixels: Uint8ClampedArray) => {
+              // Fill with test data
+              for (let i = 0; i < pixels.length; i += 4) {
+                pixels[i] = 128;     // R
+                pixels[i + 1] = 128; // G
+                pixels[i + 2] = 128; // B
+                pixels[i + 3] = 255; // A
+              }
+            },
+            deleteShader: () => {},
+            deleteProgram: () => {},
+            deleteBuffer: () => {},
+            deleteTexture: () => {},
+            getExtension: () => ({}),
+            // WebGL constants
+            VERTEX_SHADER: 35633,
+            FRAGMENT_SHADER: 35632,
+            COMPILE_STATUS: 35713,
+            LINK_STATUS: 35714,
+            ARRAY_BUFFER: 34962,
+            STATIC_DRAW: 35044,
+            TRIANGLE_STRIP: 5,
+            TEXTURE_2D: 3553,
+            TEXTURE0: 33984,
+            RGBA: 6408,
+            UNSIGNED_BYTE: 5121,
+            LINEAR: 9729,
+            CLAMP_TO_EDGE: 33071,
+            TEXTURE_WRAP_S: 10242,
+            TEXTURE_WRAP_T: 10243,
+            TEXTURE_MIN_FILTER: 10241,
+            TEXTURE_MAG_FILTER: 10240,
+            FLOAT: 5126
+          };
+        }
+        return null;
+      }
+    });
+
+    test('should enable GPU acceleration successfully', async () => {
+      const colorSplash = new ColorSplash();
+      const mockCanvas = createMockCanvas() as unknown as HTMLCanvasElement;
+
+      const success = await colorSplash.enableGPUAcceleration(mockCanvas);
+
+      expect(success).toBe(true);
+      expect(colorSplash.getOptions().gpuAcceleration).toBe(true);
+    });
+
+    test('should fail to enable GPU acceleration without WebGL', async () => {
+      const colorSplash = new ColorSplash();
+      const mockCanvas = {
+        getContext: () => null
+      } as unknown as HTMLCanvasElement;
+
+      const success = await colorSplash.enableGPUAcceleration(mockCanvas);
+
+      expect(success).toBe(false);
+      expect(colorSplash.getOptions().gpuAcceleration).toBe(false);
+    });
+
+    test('should disable GPU acceleration', async () => {
+      const colorSplash = new ColorSplash();
+      const mockCanvas = createMockCanvas() as unknown as HTMLCanvasElement;
+
+      await colorSplash.enableGPUAcceleration(mockCanvas);
+      expect(colorSplash.getOptions().gpuAcceleration).toBe(true);
+
+      colorSplash.disableGPUAcceleration();
+      expect(colorSplash.getOptions().gpuAcceleration).toBe(false);
+    });
+
+    test('should use GPU for color splash when enabled', async () => {
+      const colorSplash = new ColorSplash();
+      const mockCanvas = createMockCanvas() as unknown as HTMLCanvasElement;
+      const imageData = createTestImageData(50, 50, { r: 255, g: 0, b: 0 });
+
+      // Enable GPU acceleration
+      await colorSplash.enableGPUAcceleration(mockCanvas);
+
+      const result = await colorSplash.applyColorSplash(imageData, {
+        targetColors: [{ r: 255, g: 0, b: 0 }],
+        tolerance: { hue: 15, saturation: 20, lightness: 25 },
+        colorSpace: ColorSpace.HSV
+      });
+
+      expect(result).toBeDefined();
+      expect(result.width).toBe(imageData.width);
+      expect(result.height).toBe(imageData.height);
+    });
+
+    test('should fallback to CPU when GPU fails', async () => {
+      const colorSplash = new ColorSplash();
+      const mockCanvas = {
+        getContext: () => {
+          // Return a context that will fail during processing
+          const context = createMockCanvas().getContext('webgl');
+          if (context) {
+            // Override readPixels to throw an error
+            context.readPixels = () => {
+              throw new Error('GPU processing failed');
+            };
+          }
+          return context;
+        }
+      } as unknown as HTMLCanvasElement;
+
+      const imageData = createTestImageData(50, 50, { r: 255, g: 0, b: 0 });
+
+      // Enable GPU acceleration (should succeed)
+      await colorSplash.enableGPUAcceleration(mockCanvas);
+
+      // This should fallback to CPU processing
+      const result = await colorSplash.applyColorSplash(imageData, {
+        targetColors: [{ r: 255, g: 0, b: 0 }],
+        tolerance: { hue: 15, saturation: 20, lightness: 25 },
+        colorSpace: ColorSpace.HSV
+      });
+
+      expect(result).toBeDefined();
+      expect(result.width).toBe(imageData.width);
+      expect(result.height).toBe(imageData.height);
+    });
+
+    test('should handle multiple disable calls gracefully', () => {
+      const colorSplash = new ColorSplash();
+
+      // Should not throw even without GPU enabled
+      expect(() => colorSplash.disableGPUAcceleration()).not.toThrow();
+
+      // Should not throw on multiple calls
+      expect(() => {
+        colorSplash.disableGPUAcceleration();
+        colorSplash.disableGPUAcceleration();
+      }).not.toThrow();
+    });
+  });
 });

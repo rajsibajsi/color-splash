@@ -22,3 +22,6 @@ export { createFastPreview, resizeImageData, calculateOptimalPreviewSize } from 
 
 // Export main ColorSplash class
 export { ColorSplash } from './core/ColorSplash';
+
+// Export WebGL backend for advanced users
+export { WebGLBackend } from './core/webgl-backend';
