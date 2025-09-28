@@ -11,10 +11,7 @@ import { isColorSimilar } from '../algorithms/color-similarity';
  * @param method Grayscale conversion method
  * @returns New grayscale ImageData
  */
-export function convertToGrayscale(
-  imageData: ImageData,
-  method: GrayscaleMethod
-): ImageData {
+export function convertToGrayscale(imageData: ImageData, method: GrayscaleMethod): ImageData {
   const { data, width, height } = imageData;
   const result = new ImageData(width, height);
 
@@ -46,10 +43,10 @@ export function convertToGrayscale(
         throw new Error(`Unsupported grayscale method: ${method}`);
     }
 
-    result.data[i] = gray;     // R
+    result.data[i] = gray; // R
     result.data[i + 1] = gray; // G
     result.data[i + 2] = gray; // B
-    result.data[i + 3] = a;    // A (preserve alpha)
+    result.data[i + 3] = a; // A (preserve alpha)
   }
 
   return result;
@@ -81,11 +78,11 @@ export function extractColorMask(
     const pixelColor: Color = {
       r: data[i]!,
       g: data[i + 1]!,
-      b: data[i + 2]!
+      b: data[i + 2]!,
     };
 
     // Check if pixel matches any target color
-    const matches = targetColors.some(targetColor =>
+    const matches = targetColors.some((targetColor) =>
       isColorSimilar(pixelColor, targetColor, tolerance, colorSpace)
     );
 
@@ -125,16 +122,16 @@ export function applyColorSplash(
 
     if (mask[pixelIndex]) {
       // Preserve original color for matched pixels
-      result.data[i] = data[i]!;         // R
+      result.data[i] = data[i]!; // R
       result.data[i + 1] = data[i + 1]!; // G
       result.data[i + 2] = data[i + 2]!; // B
       result.data[i + 3] = data[i + 3]!; // A
     } else {
       // Use grayscale for non-matched pixels
-      result.data[i] = grayscaleImage.data[i]!;         // R
+      result.data[i] = grayscaleImage.data[i]!; // R
       result.data[i + 1] = grayscaleImage.data[i + 1]!; // G
       result.data[i + 2] = grayscaleImage.data[i + 2]!; // B
-      result.data[i + 3] = data[i + 3]!;               // A (preserve original alpha)
+      result.data[i + 3] = data[i + 3]!; // A (preserve original alpha)
     }
   }
 

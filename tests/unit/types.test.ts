@@ -14,7 +14,7 @@ import {
   ColorSplashError,
   ColorSplashException,
   HSVColor,
-  LABColor
+  LABColor,
 } from '../../src/types';
 
 describe('Type System Validation', () => {
@@ -46,7 +46,7 @@ describe('Type System Validation', () => {
       const tolerance: ColorTolerance = {
         hue: 15,
         saturation: 20,
-        lightness: 25
+        lightness: 25,
       };
       expect(tolerance.hue).toBe(15);
       expect(tolerance.saturation).toBe(20);
@@ -55,7 +55,7 @@ describe('Type System Validation', () => {
 
     test('should accept euclidean distance for LAB', () => {
       const tolerance: ColorTolerance = {
-        euclidean: 25
+        euclidean: 25,
       };
       expect(tolerance.euclidean).toBe(25);
     });
@@ -72,8 +72,8 @@ describe('Type System Validation', () => {
         type: 'rectangle',
         coordinates: [
           { x: 10, y: 10 },
-          { x: 100, y: 100 }
-        ]
+          { x: 100, y: 100 },
+        ],
       };
       expect(area.type).toBe('rectangle');
       expect(area.coordinates).toHaveLength(2);
@@ -84,9 +84,9 @@ describe('Type System Validation', () => {
         type: 'circle',
         coordinates: [
           { x: 50, y: 50 },
-          { x: 75, y: 50 } // Center and radius point
+          { x: 75, y: 50 }, // Center and radius point
         ],
-        featherRadius: 10
+        featherRadius: 10,
       };
       expect(area.featherRadius).toBe(10);
     });
@@ -96,7 +96,7 @@ describe('Type System Validation', () => {
     test('should accept minimal configuration', () => {
       const config: SplashConfig = {
         targetColors: [{ r: 255, g: 0, b: 0 }],
-        tolerance: { hue: 15 }
+        tolerance: { hue: 15 },
       };
       expect(config.targetColors).toHaveLength(1);
       expect(config.tolerance.hue).toBe(15);
@@ -106,16 +106,19 @@ describe('Type System Validation', () => {
       const config: SplashConfig = {
         targetColors: [
           { r: 255, g: 0, b: 0 },
-          { r: 0, g: 255, b: 0 }
+          { r: 0, g: 255, b: 0 },
         ],
         tolerance: { hue: 15, saturation: 20, lightness: 25 },
         area: {
           type: 'circle',
-          coordinates: [{ x: 100, y: 100 }, { x: 150, y: 100 }]
+          coordinates: [
+            { x: 100, y: 100 },
+            { x: 150, y: 100 },
+          ],
         },
         colorSpace: ColorSpace.HSV,
         grayscaleMethod: GrayscaleMethod.LUMINANCE,
-        blendMode: BlendMode.REPLACE
+        blendMode: BlendMode.REPLACE,
       };
 
       expect(config.targetColors).toHaveLength(2);
@@ -199,13 +202,10 @@ describe('Type System Validation', () => {
       const createConfig = (colors: Color[], tolerance: ColorTolerance): SplashConfig => ({
         targetColors: colors,
         tolerance,
-        colorSpace: ColorSpace.HSV
+        colorSpace: ColorSpace.HSV,
       });
 
-      const config = createConfig(
-        [{ r: 255, g: 0, b: 0 }],
-        { hue: 15, saturation: 20 }
-      );
+      const config = createConfig([{ r: 255, g: 0, b: 0 }], { hue: 15, saturation: 20 });
 
       expect(config.targetColors).toHaveLength(1);
       expect(config.tolerance.hue).toBe(15);
@@ -216,7 +216,7 @@ describe('Type System Validation', () => {
       expect(() => {
         const config: SplashConfig = {
           targetColors: [{ r: 255, g: 0, b: 0 }],
-          tolerance: { hue: 15 }
+          tolerance: { hue: 15 },
         };
         return config;
       }).not.toThrow();

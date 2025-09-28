@@ -63,7 +63,6 @@ export class WebGLBackend {
 
       this.isInitialized = true;
       return true;
-
     } catch (error) {
       console.error('Failed to initialize WebGL backend:', error);
       return false;
@@ -283,7 +282,7 @@ export class WebGLBackend {
       u_targetColors: this.gl.getUniformLocation(program, 'u_targetColors'),
       u_numTargetColors: this.gl.getUniformLocation(program, 'u_numTargetColors'),
       u_tolerance: this.gl.getUniformLocation(program, 'u_tolerance'),
-      u_colorSpace: this.gl.getUniformLocation(program, 'u_colorSpace')
+      u_colorSpace: this.gl.getUniformLocation(program, 'u_colorSpace'),
     };
 
     return { program, uniforms };
@@ -297,10 +296,7 @@ export class WebGLBackend {
 
     const vertices = new Float32Array([
       // Position, TexCoord
-      -1, -1,  0, 0,
-       1, -1,  1, 0,
-      -1,  1,  0, 1,
-       1,  1,  1, 1
+      -1, -1, 0, 0, 1, -1, 1, 0, -1, 1, 0, 1, 1, 1, 1, 1,
     ]);
 
     this.quadBuffer = this.gl.createBuffer();
@@ -402,9 +398,14 @@ export class WebGLBackend {
     const toleranceVec: [number, number, number] = [
       tolerance.hue || 15,
       tolerance.saturation || 20,
-      tolerance.lightness || 25
+      tolerance.lightness || 25,
     ];
-    this.gl.uniform3f(this.colorSplashProgram.uniforms.u_tolerance, toleranceVec[0], toleranceVec[1], toleranceVec[2]);
+    this.gl.uniform3f(
+      this.colorSplashProgram.uniforms.u_tolerance,
+      toleranceVec[0],
+      toleranceVec[1],
+      toleranceVec[2]
+    );
 
     // Set color space
     const colorSpaceValue = colorSpace === ColorSpace.HSV ? 1 : 0;
@@ -415,7 +416,15 @@ export class WebGLBackend {
 
     // Read back result
     const resultData = new Uint8ClampedArray(imageData.width * imageData.height * 4);
-    this.gl.readPixels(0, 0, imageData.width, imageData.height, this.gl.RGBA, this.gl.UNSIGNED_BYTE, resultData);
+    this.gl.readPixels(
+      0,
+      0,
+      imageData.width,
+      imageData.height,
+      this.gl.RGBA,
+      this.gl.UNSIGNED_BYTE,
+      resultData
+    );
 
     // Clean up
     this.gl.deleteTexture(inputTexture);
