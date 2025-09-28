@@ -18,10 +18,20 @@ export { isColorSimilar, calculateColorDistance } from './algorithms/color-simil
 export { convertToGrayscale, extractColorMask, applyColorSplash } from './core/image-processing';
 
 // Export performance optimization functions
-export { createFastPreview, resizeImageData, calculateOptimalPreviewSize } from './core/performance-optimization';
+export {
+  createFastPreview,
+  resizeImageData,
+  calculateOptimalPreviewSize,
+} from './core/performance-optimization';
 
 // Export selection area processing
-export { SelectionAreaProcessor, createRectangleSelection, createCircleSelection, createPolygonSelection, createFreehandSelection } from './core/area-processor';
+export {
+  SelectionAreaProcessor,
+  createRectangleSelection,
+  createCircleSelection,
+  createPolygonSelection,
+  createFreehandSelection,
+} from './core/area-processor';
 
 // Export main ColorSplash class
 export { ColorSplash } from './core/ColorSplash';

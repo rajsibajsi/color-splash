@@ -8,19 +8,19 @@ Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
     getImageData: jest.fn(() => ({
       data: new Uint8ClampedArray(4),
       width: 1,
-      height: 1
+      height: 1,
     })),
     putImageData: jest.fn(),
     createImageData: jest.fn(() => ({
       data: new Uint8ClampedArray(4),
       width: 1,
-      height: 1
+      height: 1,
     })),
     setTransform: jest.fn(),
     drawImage: jest.fn(),
     save: jest.fn(),
-    restore: jest.fn()
-  }))
+    restore: jest.fn(),
+  })),
 });
 
 // Mock ImageData constructor with minimal required properties
@@ -46,7 +46,7 @@ global.ImageData = class ImageData {
 // Performance mock for testing
 if (!global.performance) {
   global.performance = {
-    now: jest.fn(() => Date.now())
+    now: jest.fn(() => Date.now()),
   } as any;
 }
 

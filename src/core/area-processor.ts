@@ -38,7 +38,7 @@ export class SelectionAreaProcessor implements AreaProcessor {
    */
   applyFeathering(mask: boolean[], featherRadius: number, width: number, height: number): number[] {
     if (featherRadius <= 0) {
-      return mask.map(value => value ? 1 : 0);
+      return mask.map((value) => (value ? 1 : 0));
     }
 
     const result = new Array(mask.length).fill(0);
@@ -76,8 +76,7 @@ export class SelectionAreaProcessor implements AreaProcessor {
     if (coordinates.length === 2) {
       // Simple axis-aligned rectangle
       const [topLeft, bottomRight] = coordinates;
-      return x >= topLeft!.x && x <= bottomRight!.x &&
-             y >= topLeft!.y && y <= bottomRight!.y;
+      return x >= topLeft!.x && x <= bottomRight!.x && y >= topLeft!.y && y <= bottomRight!.y;
     } else {
       // Rotated rectangle - treat as polygon
       return this.isPointInPolygon(x, y, coordinates);
@@ -100,18 +99,14 @@ export class SelectionAreaProcessor implements AreaProcessor {
       // Calculate radius from center to edge point
       const edgePoint = coordinates[1]!;
       radius = Math.sqrt(
-        Math.pow(edgePoint.x - center!.x, 2) +
-        Math.pow(edgePoint.y - center!.y, 2)
+        Math.pow(edgePoint.x - center!.x, 2) + Math.pow(edgePoint.y - center!.y, 2)
       );
     } else {
       throw new Error('Circle requires center and edge point to determine radius');
     }
 
     // Check if point is within radius
-    const distance = Math.sqrt(
-      Math.pow(x - center!.x, 2) +
-      Math.pow(y - center!.y, 2)
-    );
+    const distance = Math.sqrt(Math.pow(x - center!.x, 2) + Math.pow(y - center!.y, 2));
 
     return distance <= radius;
   }
@@ -133,8 +128,7 @@ export class SelectionAreaProcessor implements AreaProcessor {
       const xj = coordinates[j]!.x;
       const yj = coordinates[j]!.y;
 
-      if (((yi > y) !== (yj > y)) &&
-          (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+      if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
         inside = !inside;
       }
     }
@@ -225,7 +219,7 @@ export class SelectionAreaProcessor implements AreaProcessor {
     if (area.featherRadius && area.featherRadius > 0) {
       return this.applyFeathering(selectionMask, area.featherRadius, width, height);
     } else {
-      return selectionMask.map(value => value ? 1 : 0);
+      return selectionMask.map((value) => (value ? 1 : 0));
     }
   }
 
@@ -251,7 +245,7 @@ export class SelectionAreaProcessor implements AreaProcessor {
 
       if (alpha === 1) {
         // Fully inside selection - keep original
-        result.data[i] = data[i]!;         // R
+        result.data[i] = data[i]!; // R
         result.data[i + 1] = data[i + 1]!; // G
         result.data[i + 2] = data[i + 2]!; // B
         result.data[i + 3] = data[i + 3]!; // A
@@ -302,8 +296,8 @@ export function createRectangleSelection(
     type: 'rectangle',
     coordinates: [
       { x: Math.min(x1, x2), y: Math.min(y1, y2) },
-      { x: Math.max(x1, x2), y: Math.max(y1, y2) }
-    ]
+      { x: Math.max(x1, x2), y: Math.max(y1, y2) },
+    ],
   };
   if (featherRadius !== undefined) {
     result.featherRadius = featherRadius;
@@ -329,8 +323,8 @@ export function createCircleSelection(
     type: 'circle',
     coordinates: [
       { x: centerX, y: centerY },
-      { x: centerX + radius, y: centerY } // Edge point to define radius
-    ]
+      { x: centerX + radius, y: centerY }, // Edge point to define radius
+    ],
   };
   if (featherRadius !== undefined) {
     result.featherRadius = featherRadius;
@@ -344,17 +338,14 @@ export function createCircleSelection(
  * @param featherRadius Optional feather radius
  * @returns SelectionArea object
  */
-export function createPolygonSelection(
-  points: Point[],
-  featherRadius?: number
-): SelectionArea {
+export function createPolygonSelection(points: Point[], featherRadius?: number): SelectionArea {
   if (points.length < 3) {
     throw new Error('Polygon requires at least 3 points');
   }
 
   const result: SelectionArea = {
     type: 'polygon',
-    coordinates: [...points] // Copy array to avoid mutation
+    coordinates: [...points], // Copy array to avoid mutation
   };
   if (featherRadius !== undefined) {
     result.featherRadius = featherRadius;
@@ -368,17 +359,14 @@ export function createPolygonSelection(
  * @param featherRadius Optional feather radius
  * @returns SelectionArea object
  */
-export function createFreehandSelection(
-  points: Point[],
-  featherRadius?: number
-): SelectionArea {
+export function createFreehandSelection(points: Point[], featherRadius?: number): SelectionArea {
   if (points.length < 2) {
     throw new Error('Freehand path requires at least 2 points');
   }
 
   const result: SelectionArea = {
     type: 'freehand',
-    coordinates: [...points] // Copy array to avoid mutation
+    coordinates: [...points], // Copy array to avoid mutation
   };
   if (featherRadius !== undefined) {
     result.featherRadius = featherRadius;

@@ -10,10 +10,10 @@ export interface Color {
 }
 
 export interface ColorTolerance {
-  hue?: number;        // 0-360 degrees
+  hue?: number; // 0-360 degrees
   saturation?: number; // 0-100%
-  lightness?: number;  // 0-100%
-  euclidean?: number;  // For LAB color space
+  lightness?: number; // 0-100%
+  euclidean?: number; // For LAB color space
 }
 
 export interface Point {
@@ -49,26 +49,26 @@ export interface ColorSplashOptions {
 export enum ColorSpace {
   RGB = 'rgb',
   HSV = 'hsv',
-  LAB = 'lab'
+  LAB = 'lab',
 }
 
 export enum GrayscaleMethod {
-  LUMINANCE = 'luminance',    // 0.299*R + 0.587*G + 0.114*B
-  AVERAGE = 'average',        // (R + G + B) / 3
-  DESATURATION = 'desaturation' // (max(R,G,B) + min(R,G,B)) / 2
+  LUMINANCE = 'luminance', // 0.299*R + 0.587*G + 0.114*B
+  AVERAGE = 'average', // (R + G + B) / 3
+  DESATURATION = 'desaturation', // (max(R,G,B) + min(R,G,B)) / 2
 }
 
 export enum BlendMode {
-  REPLACE = 'replace',        // Direct replacement
-  OVERLAY = 'overlay',        // Blend with original
-  MULTIPLY = 'multiply'       // Multiply blend
+  REPLACE = 'replace', // Direct replacement
+  OVERLAY = 'overlay', // Blend with original
+  MULTIPLY = 'multiply', // Multiply blend
 }
 
 export enum PreviewQuality {
-  LOW = 'low',           // 1/8 resolution, pixel sampling
-  MEDIUM = 'medium',     // 1/4 resolution, basic filtering
-  HIGH = 'high',         // 1/2 resolution, full processing
-  REALTIME = 'realtime'  // Dynamic quality based on performance
+  LOW = 'low', // 1/8 resolution, pixel sampling
+  MEDIUM = 'medium', // 1/4 resolution, basic filtering
+  HIGH = 'high', // 1/2 resolution, full processing
+  REALTIME = 'realtime', // Dynamic quality based on performance
 }
 
 export enum ColorSplashError {
@@ -76,7 +76,7 @@ export enum ColorSplashError {
   UNSUPPORTED_COLOR_SPACE = 'UNSUPPORTED_COLOR_SPACE',
   INVALID_TOLERANCE_VALUES = 'INVALID_TOLERANCE_VALUES',
   PROCESSING_FAILED = 'PROCESSING_FAILED',
-  WEBGL_NOT_SUPPORTED = 'WEBGL_NOT_SUPPORTED'
+  WEBGL_NOT_SUPPORTED = 'WEBGL_NOT_SUPPORTED',
 }
 
 export class ColorSplashException extends Error {

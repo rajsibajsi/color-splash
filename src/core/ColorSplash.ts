@@ -10,14 +10,14 @@ import {
   PreviewQuality,
   ColorSplashOptions,
   SplashConfig,
-  SelectionArea
+  SelectionArea,
 } from '../types';
 import { applyColorSplash } from './image-processing';
 import {
   calculateOptimalPreviewSize,
   resizeImageData,
   PreviewCache,
-  PerformanceMonitor
+  PerformanceMonitor,
 } from './performance-optimization';
 import { SelectionAreaProcessor } from './area-processor';
 
@@ -38,7 +38,7 @@ export class ColorSplash {
       webWorkers: options.webWorkers || false,
       gpuAcceleration: options.gpuAcceleration || false,
       previewQuality: options.previewQuality || PreviewQuality.MEDIUM,
-      maxPreviewSize: options.maxPreviewSize || 500
+      maxPreviewSize: options.maxPreviewSize || 500,
     };
 
     this.cache = new PreviewCache();
@@ -70,7 +70,7 @@ export class ColorSplash {
     return {
       r: imageData.data[index]!,
       g: imageData.data[index + 1]!,
-      b: imageData.data[index + 2]!
+      b: imageData.data[index + 2]!,
     };
   }
 
@@ -107,12 +107,13 @@ export class ColorSplash {
     const endTimer = this.performanceMonitor.startTimer('create_fast_preview');
 
     // Generate cache key including quality
-    const cacheKey = this.cache.generateCacheKey(
-      imageData,
-      targetColors,
-      tolerance,
-      this.options.defaultColorSpace
-    ) + `_${quality}`;
+    const cacheKey =
+      this.cache.generateCacheKey(
+        imageData,
+        targetColors,
+        tolerance,
+        this.options.defaultColorSpace
+      ) + `_${quality}`;
 
     // Check cache first
     const cached = this.cache.get(cacheKey);
@@ -148,7 +149,7 @@ export class ColorSplash {
     this.lastConfig = {
       targetColors,
       tolerance,
-      colorSpace: this.options.defaultColorSpace
+      colorSpace: this.options.defaultColorSpace,
     };
 
     endTimer();
@@ -170,7 +171,7 @@ export class ColorSplash {
     // Merge with last configuration
     const fullConfig = {
       ...this.lastConfig,
-      ...partialConfig
+      ...partialConfig,
     };
 
     const targetColors = fullConfig.targetColors || [];
@@ -257,7 +258,9 @@ export class ColorSplash {
   /**
    * Get performance statistics
    */
-  getPerformanceStats(): { [operationName: string]: { average: number; min: number; max: number; count: number } | null } {
+  getPerformanceStats(): {
+    [operationName: string]: { average: number; min: number; max: number; count: number } | null;
+  } {
     return this.performanceMonitor.getAllStats();
   }
 
@@ -281,7 +284,7 @@ export class ColorSplash {
   getCacheStats(): { size: number; maxSize: number } {
     return {
       size: this.cache.size(),
-      maxSize: 20 // Current max cache size
+      maxSize: 20, // Current max cache size
     };
   }
 
@@ -290,7 +293,10 @@ export class ColorSplash {
    * @param imageData Source image data
    * @param method Grayscale method (optional)
    */
-  convertToGrayscale(imageData: ImageData, method: GrayscaleMethod = GrayscaleMethod.LUMINANCE): ImageData {
+  convertToGrayscale(
+    imageData: ImageData,
+    method: GrayscaleMethod = GrayscaleMethod.LUMINANCE
+  ): ImageData {
     const { convertToGrayscale } = require('./image-processing');
     return convertToGrayscale(imageData, method);
   }
@@ -361,13 +367,13 @@ export class ColorSplash {
 
       if (alpha === 1) {
         // Fully inside selection - use splashed version
-        result.data[i] = splashedImage.data[i]!;         // R
+        result.data[i] = splashedImage.data[i]!; // R
         result.data[i + 1] = splashedImage.data[i + 1]!; // G
         result.data[i + 2] = splashedImage.data[i + 2]!; // B
         result.data[i + 3] = splashedImage.data[i + 3]!; // A
       } else if (alpha === 0) {
         // Fully outside selection - use original
-        result.data[i] = imageData.data[i]!;         // R
+        result.data[i] = imageData.data[i]!; // R
         result.data[i + 1] = imageData.data[i + 1]!; // G
         result.data[i + 2] = imageData.data[i + 2]!; // B
         result.data[i + 3] = imageData.data[i + 3]!; // A

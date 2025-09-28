@@ -8,14 +8,18 @@ import { Color, ColorSpace, GrayscaleMethod, PreviewQuality } from '../../src/ty
 
 describe('ColorSplash Class', () => {
   // Helper function to create test ImageData
-  function createTestImageData(width: number, height: number, fillColor: Color = { r: 128, g: 128, b: 128 }): ImageData {
+  function createTestImageData(
+    width: number,
+    height: number,
+    fillColor: Color = { r: 128, g: 128, b: 128 }
+  ): ImageData {
     const data = new Uint8ClampedArray(width * height * 4);
 
     for (let i = 0; i < data.length; i += 4) {
-      data[i] = fillColor.r;     // R
+      data[i] = fillColor.r; // R
       data[i + 1] = fillColor.g; // G
       data[i + 2] = fillColor.b; // B
-      data[i + 3] = 255;         // A
+      data[i + 3] = 255; // A
     }
 
     return new ImageData(data, width, height);
@@ -35,7 +39,7 @@ describe('ColorSplash Class', () => {
         defaultColorSpace: ColorSpace.LAB,
         previewQuality: PreviewQuality.HIGH,
         maxPreviewSize: 600,
-        gpuAcceleration: true
+        gpuAcceleration: true,
       };
 
       const colorSplash = new ColorSplash(options);
@@ -115,11 +119,17 @@ describe('ColorSplash Class', () => {
       const targetColor = { r: 255, g: 0, b: 0 };
 
       const lowPreview = await colorSplash.createFastPreview(
-        imageData, [targetColor], { hue: 15 }, PreviewQuality.LOW
+        imageData,
+        [targetColor],
+        { hue: 15 },
+        PreviewQuality.LOW
       );
 
       const highPreview = await colorSplash.createFastPreview(
-        imageData, [targetColor], { hue: 15 }, PreviewQuality.HIGH
+        imageData,
+        [targetColor],
+        { hue: 15 },
+        PreviewQuality.HIGH
       );
 
       expect(lowPreview.width).toBeLessThan(highPreview.width);
@@ -180,7 +190,7 @@ describe('ColorSplash Class', () => {
       // Update with different colors
       const updatedPreview = await colorSplash.updatePreview({
         targetColors: [{ r: 0, g: 255, b: 0 }],
-        tolerance: { hue: 20 }
+        tolerance: { hue: 20 },
       });
 
       expect(updatedPreview).toBeDefined();
@@ -197,7 +207,7 @@ describe('ColorSplash Class', () => {
         targetColors: [targetColor],
         tolerance: { hue: 15, saturation: 20, lightness: 25 },
         colorSpace: ColorSpace.HSV,
-        grayscaleMethod: GrayscaleMethod.LUMINANCE
+        grayscaleMethod: GrayscaleMethod.LUMINANCE,
       });
 
       expect(result.width).toBe(imageData.width);
@@ -213,7 +223,7 @@ describe('ColorSplash Class', () => {
 
       // Add some color variation
       for (let i = 0; i < imageData.data.length; i += 16) {
-        imageData.data[i] = 255;     // Red pixel
+        imageData.data[i] = 255; // Red pixel
         imageData.data[i + 1] = 0;
         imageData.data[i + 2] = 0;
         imageData.data[i + 3] = 255;
@@ -222,11 +232,11 @@ describe('ColorSplash Class', () => {
       const config = {
         targetColors: [
           { r: 255, g: 0, b: 0 },
-          { r: 0, g: 255, b: 0 }
+          { r: 0, g: 255, b: 0 },
         ],
         tolerance: { hue: 20, saturation: 30, lightness: 35 },
         colorSpace: ColorSpace.HSV,
-        grayscaleMethod: GrayscaleMethod.LUMINANCE
+        grayscaleMethod: GrayscaleMethod.LUMINANCE,
       };
 
       const result = await colorSplash.applyColorSplash(imageData, config);

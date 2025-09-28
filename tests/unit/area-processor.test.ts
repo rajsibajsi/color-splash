@@ -3,7 +3,13 @@
  */
 
 // @ts-nocheck
-import { SelectionAreaProcessor, createRectangleSelection, createCircleSelection, createPolygonSelection, createFreehandSelection } from '../../src/core/area-processor';
+import {
+  SelectionAreaProcessor,
+  createRectangleSelection,
+  createCircleSelection,
+  createPolygonSelection,
+  createFreehandSelection,
+} from '../../src/core/area-processor';
 import { SelectionArea, Point } from '../../src/types';
 
 describe('SelectionAreaProcessor', () => {
@@ -45,8 +51,8 @@ describe('SelectionAreaProcessor', () => {
           { x: 0, y: 0 },
           { x: 30, y: 20 },
           { x: 20, y: 50 },
-          { x: -10, y: 30 }
-        ]
+          { x: -10, y: 30 },
+        ],
       };
 
       // Test point inside rotated rectangle
@@ -80,10 +86,12 @@ describe('SelectionAreaProcessor', () => {
     test('should throw error with insufficient coordinates', () => {
       const area: SelectionArea = {
         type: 'circle',
-        coordinates: []
+        coordinates: [],
       };
 
-      expect(() => processor.isPointInArea(10, 10, area)).toThrow('Circle requires at least 1 coordinate');
+      expect(() => processor.isPointInArea(10, 10, area)).toThrow(
+        'Circle requires at least 1 coordinate'
+      );
     });
   });
 
@@ -92,7 +100,7 @@ describe('SelectionAreaProcessor', () => {
       const area = createPolygonSelection([
         { x: 0, y: 0 },
         { x: 40, y: 0 },
-        { x: 20, y: 30 }
+        { x: 20, y: 30 },
       ]);
 
       expect(processor.isPointInArea(20, 10, area)).toBe(true);
@@ -103,7 +111,7 @@ describe('SelectionAreaProcessor', () => {
       const area = createPolygonSelection([
         { x: 10, y: 10 },
         { x: 50, y: 10 },
-        { x: 30, y: 40 }
+        { x: 30, y: 40 },
       ]);
 
       expect(processor.isPointInArea(5, 5, area)).toBe(false);
@@ -118,7 +126,7 @@ describe('SelectionAreaProcessor', () => {
         { x: 20, y: 10 },
         { x: 40, y: 10 },
         { x: 40, y: 30 },
-        { x: 0, y: 30 }
+        { x: 0, y: 30 },
       ]);
 
       expect(processor.isPointInArea(10, 5, area)).toBe(true);
@@ -127,10 +135,12 @@ describe('SelectionAreaProcessor', () => {
     });
 
     test('should throw error with insufficient points', () => {
-      expect(() => createPolygonSelection([
-        { x: 0, y: 0 },
-        { x: 10, y: 10 }
-      ])).toThrow('Polygon requires at least 3 points');
+      expect(() =>
+        createPolygonSelection([
+          { x: 0, y: 0 },
+          { x: 10, y: 10 },
+        ])
+      ).toThrow('Polygon requires at least 3 points');
     });
   });
 
@@ -142,7 +152,7 @@ describe('SelectionAreaProcessor', () => {
         { x: 20, y: 0 },
         { x: 25, y: 15 },
         { x: 15, y: 25 },
-        { x: 5, y: 20 }
+        { x: 5, y: 20 },
       ]);
 
       expect(processor.isPointInArea(15, 10, area)).toBe(true);
@@ -154,17 +164,17 @@ describe('SelectionAreaProcessor', () => {
         type: 'freehand',
         coordinates: [
           { x: 0, y: 0 },
-          { x: 10, y: 10 }
-        ]
+          { x: 10, y: 10 },
+        ],
       };
 
       expect(processor.isPointInArea(5, 5, area)).toBe(false);
     });
 
     test('should throw error when creating with insufficient points', () => {
-      expect(() => createFreehandSelection([
-        { x: 0, y: 0 }
-      ])).toThrow('Freehand path requires at least 2 points');
+      expect(() => createFreehandSelection([{ x: 0, y: 0 }])).toThrow(
+        'Freehand path requires at least 2 points'
+      );
     });
   });
 
@@ -176,9 +186,9 @@ describe('SelectionAreaProcessor', () => {
       expect(mask.length).toBe(25);
 
       // Check specific positions
-      expect(mask[6]).toBe(true);  // (1,1)
-      expect(mask[7]).toBe(true);  // (2,1)
-      expect(mask[8]).toBe(true);  // (3,1)
+      expect(mask[6]).toBe(true); // (1,1)
+      expect(mask[7]).toBe(true); // (2,1)
+      expect(mask[8]).toBe(true); // (3,1)
       expect(mask[0]).toBe(false); // (0,0)
       expect(mask[24]).toBe(false); // (4,4)
     });
@@ -189,7 +199,7 @@ describe('SelectionAreaProcessor', () => {
 
       expect(mask.length).toBe(25);
       expect(mask[12]).toBe(true); // Center (2,2)
-      expect(mask[7]).toBe(true);  // (2,1) - inside radius
+      expect(mask[7]).toBe(true); // (2,1) - inside radius
       expect(mask[0]).toBe(false); // (0,0) - outside radius
     });
   });
@@ -225,11 +235,7 @@ describe('SelectionAreaProcessor', () => {
     });
 
     test('should apply smooth feathering', () => {
-      const mask = [
-        false, true, false,
-        false, false, false,
-        false, false, false
-      ];
+      const mask = [false, true, false, false, false, false, false, false, false];
       const result = processor.applyFeathering(mask, 1.5, 3, 3);
 
       expect(result[1]).toBe(1); // Selected pixel at index 1 (0,1)
@@ -243,9 +249,9 @@ describe('SelectionAreaProcessor', () => {
     function createTestImageData(width: number, height: number): ImageData {
       const data = new Uint8ClampedArray(width * height * 4);
       for (let i = 0; i < data.length; i += 4) {
-        data[i] = 255;     // R
+        data[i] = 255; // R
         data[i + 1] = 128; // G
-        data[i + 2] = 64;  // B
+        data[i + 2] = 64; // B
         data[i + 3] = 255; // A
       }
       return new ImageData(data, width, height);
@@ -262,14 +268,14 @@ describe('SelectionAreaProcessor', () => {
 
       // Check that selected area preserves original colors
       const centerIndex = (1 * 4 + 1) * 4; // (1,1)
-      expect(result.data[centerIndex]).toBe(255);     // R
+      expect(result.data[centerIndex]).toBe(255); // R
       expect(result.data[centerIndex + 1]).toBe(128); // G
-      expect(result.data[centerIndex + 2]).toBe(64);  // B
+      expect(result.data[centerIndex + 2]).toBe(64); // B
       expect(result.data[centerIndex + 3]).toBe(255); // A
 
       // Check that unselected area uses outside color (transparent)
       const outsideIndex = 0; // (0,0)
-      expect(result.data[outsideIndex]).toBe(0);     // R
+      expect(result.data[outsideIndex]).toBe(0); // R
       expect(result.data[outsideIndex + 1]).toBe(0); // G
       expect(result.data[outsideIndex + 2]).toBe(0); // B
       expect(result.data[outsideIndex + 3]).toBe(0); // A
@@ -284,9 +290,9 @@ describe('SelectionAreaProcessor', () => {
 
       // Check unselected area uses custom outside color
       const outsideIndex = (2 * 3 + 2) * 4; // (2,2)
-      expect(result.data[outsideIndex]).toBe(255);     // R
-      expect(result.data[outsideIndex + 1]).toBe(0);   // G
-      expect(result.data[outsideIndex + 2]).toBe(0);   // B
+      expect(result.data[outsideIndex]).toBe(255); // R
+      expect(result.data[outsideIndex + 1]).toBe(0); // G
+      expect(result.data[outsideIndex + 2]).toBe(0); // B
       expect(result.data[outsideIndex + 3]).toBe(128); // A
     });
 
@@ -326,7 +332,11 @@ describe('SelectionAreaProcessor', () => {
     });
 
     test('createPolygonSelection should copy points array', () => {
-      const points = [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 5, y: 10 }];
+      const points = [
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+        { x: 5, y: 10 },
+      ];
       const area = createPolygonSelection(points, 2);
 
       expect(area.type).toBe('polygon');
@@ -336,7 +346,11 @@ describe('SelectionAreaProcessor', () => {
     });
 
     test('createFreehandSelection should copy points array', () => {
-      const points = [{ x: 0, y: 0 }, { x: 5, y: 5 }, { x: 10, y: 0 }];
+      const points = [
+        { x: 0, y: 0 },
+        { x: 5, y: 5 },
+        { x: 10, y: 0 },
+      ];
       const area = createFreehandSelection(points, 1);
 
       expect(area.type).toBe('freehand');
@@ -350,7 +364,7 @@ describe('SelectionAreaProcessor', () => {
     test('should throw error for unsupported area type', () => {
       const area: SelectionArea = {
         type: 'invalid' as any,
-        coordinates: []
+        coordinates: [],
       };
 
       expect(() => processor.isPointInArea(0, 0, area)).toThrow('Unsupported area type: invalid');
@@ -366,10 +380,12 @@ describe('SelectionAreaProcessor', () => {
     test('should handle empty coordinates gracefully', () => {
       const area: SelectionArea = {
         type: 'rectangle',
-        coordinates: []
+        coordinates: [],
       };
 
-      expect(() => processor.isPointInArea(0, 0, area)).toThrow('Rectangle requires at least 2 coordinates');
+      expect(() => processor.isPointInArea(0, 0, area)).toThrow(
+        'Rectangle requires at least 2 coordinates'
+      );
     });
   });
 });
