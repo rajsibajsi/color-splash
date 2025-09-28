@@ -75,7 +75,7 @@ export function calculateOptimalPreviewSize(
     case PreviewQuality.HIGH:
       scaleFactor = 0.5; // 1/2 resolution
       break;
-    case PreviewQuality.REALTIME:
+    case PreviewQuality.REALTIME: {
       // Dynamic scaling based on image size
       const pixelCount = originalWidth * originalHeight;
       if (pixelCount > 2000000) {
@@ -88,6 +88,7 @@ export function calculateOptimalPreviewSize(
         scaleFactor = 0.5;
       }
       break;
+    }
     default:
       scaleFactor = 0.25;
   }

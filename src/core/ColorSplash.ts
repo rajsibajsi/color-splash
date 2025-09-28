@@ -297,6 +297,8 @@ export class ColorSplash {
     imageData: ImageData,
     method: GrayscaleMethod = GrayscaleMethod.LUMINANCE
   ): ImageData {
+    // Import dynamically to avoid circular dependency
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { convertToGrayscale } = require('./image-processing');
     return convertToGrayscale(imageData, method);
   }
