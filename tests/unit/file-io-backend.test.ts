@@ -4,6 +4,28 @@
 
 // @ts-nocheck
 
+// Mock classes need to be defined first
+class BasicMockCanvas {
+  width = 1;
+  height = 1;
+
+  toDataURL(type = 'image/png') {
+    if (type === 'image/jpeg') return 'data:image/jpeg;base64,test';
+    if (type === 'image/webp') return 'data:image/webp;base64,test';
+    return 'data:image/png;base64,test';
+  }
+}
+
+// Set up basic DOM mocks BEFORE importing FileIOBackend
+global.document = {
+  createElement: (tagName: string) => {
+    if (tagName === 'canvas') {
+      return new BasicMockCanvas();
+    }
+    return {};
+  }
+} as any;
+
 import { FileIOBackend, ImageLoadOptions, ImageSaveOptions } from '../../src/core/file-io-backend';
 
 // Mock DOM APIs for testing
@@ -14,6 +36,7 @@ class MockCanvas {
 
   constructor() {
     this.context = new MockCanvasRenderingContext2D();
+    this.context.canvas = this;
   }
 
   getContext(contextType: string): MockCanvasRenderingContext2D | null {
@@ -55,12 +78,17 @@ class MockCanvas {
 }
 
 class MockCanvasRenderingContext2D {
+  canvas: MockCanvas | null = null;
+
   drawImage(image: any, sx: number, sy: number, sw?: number, sh?: number): void {
     // Mock implementation
   }
 
   getImageData(x: number, y: number, width: number, height: number): ImageData {
-    const data = new Uint8ClampedArray(width * height * 4);
+    // Use canvas dimensions if available, otherwise use provided dimensions
+    const actualWidth = this.canvas ? this.canvas.width : width;
+    const actualHeight = this.canvas ? this.canvas.height : height;
+    const data = new Uint8ClampedArray(actualWidth * actualHeight * 4);
 
     // Fill with test pattern
     for (let i = 0; i < data.length; i += 4) {
@@ -70,7 +98,7 @@ class MockCanvasRenderingContext2D {
       data[i + 3] = 255; // A
     }
 
-    return new ImageData(data, width, height);
+    return new ImageData(data, actualWidth, actualHeight);
   }
 
   putImageData(imageData: ImageData, x: number, y: number): void {
@@ -160,7 +188,7 @@ const mockGlobals = {
   Uint8ClampedArray
 };
 
-// Set up global mocks
+// Set up global mocks - override the initial setup with the complete mock
 Object.assign(global, mockGlobals);
 
 describe('FileIOBackend', () => {
@@ -337,7 +365,11 @@ describe('FileIOBackend', () => {
     test('should handle missing canvas gracefully', () => {
       // Create backend without canvas support
       const originalDocument = global.document;
-      delete (global as any).document;
+      (global as any).document = {
+        createElement: () => {
+          throw new Error('Canvas not supported');
+        }
+      };
 
       const backendWithoutCanvas = new FileIOBackend();
 
