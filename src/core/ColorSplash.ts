@@ -19,6 +19,7 @@ import {
   PreviewCache,
   PerformanceMonitor,
 } from './performance-optimization';
+import { WebGLBackend } from './webgl-backend';
 import { SelectionAreaProcessor } from './area-processor';
 
 export class ColorSplash {
@@ -27,6 +28,7 @@ export class ColorSplash {
   private performanceMonitor: PerformanceMonitor;
   private preloadedImage: ImageData | null = null;
   private lastConfig: Partial<SplashConfig> | null = null;
+  private webglBackend: WebGLBackend | null = null;
   private areaProcessor: SelectionAreaProcessor;
 
   constructor(options: ColorSplashOptions = {}) {
@@ -197,6 +199,24 @@ export class ColorSplash {
   async applyColorSplash(imageData: ImageData, config: SplashConfig): Promise<ImageData> {
     const endTimer = this.performanceMonitor.startTimer('apply_color_splash');
 
+    try {
+      // Try GPU acceleration if available
+      if (this.options.gpuAcceleration && this.webglBackend && this.webglBackend.isAvailable()) {
+        const result = await this.webglBackend.applyColorSplash(
+          imageData,
+          config.targetColors,
+          config.tolerance,
+          config.colorSpace || this.options.defaultColorSpace
+        );
+        endTimer();
+        return result;
+      }
+    } catch (error) {
+      console.warn('GPU acceleration failed, falling back to CPU:', error);
+      // Fall through to CPU implementation
+    }
+
+    // Fallback to CPU implementation
     const result = applyColorSplash(
       imageData,
       config.targetColors,
@@ -228,7 +248,7 @@ export class ColorSplash {
   }
 
   /**
-   * Enable GPU acceleration (placeholder for WebGL implementation)
+   * Enable GPU acceleration using WebGL
    * @param canvas Canvas element for WebGL context
    * @returns Promise<boolean> Success status
    */
@@ -236,23 +256,37 @@ export class ColorSplash {
     const endTimer = this.performanceMonitor.startTimer('enable_gpu');
 
     try {
-      // Placeholder for WebGL setup
-      const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+      this.webglBackend = new WebGLBackend();
+      const success = await this.webglBackend.initialize(canvas);
 
-      if (!gl) {
+      if (success) {
+        this.options.gpuAcceleration = true;
+        endTimer();
+        return true;
+      } else {
+        this.webglBackend = null;
         this.options.gpuAcceleration = false;
         endTimer();
         return false;
       }
-
-      this.options.gpuAcceleration = true;
-      endTimer();
-      return true;
     } catch (error) {
+      console.error('GPU acceleration initialization failed:', error);
+      this.webglBackend = null;
       this.options.gpuAcceleration = false;
       endTimer();
       return false;
     }
+  }
+
+  /**
+   * Disable GPU acceleration
+   */
+  disableGPUAcceleration(): void {
+    if (this.webglBackend) {
+      this.webglBackend.dispose();
+      this.webglBackend = null;
+    }
+    this.options.gpuAcceleration = false;
   }
 
   /**
