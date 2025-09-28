@@ -18,6 +18,7 @@ import {
   PreviewCache,
   PerformanceMonitor
 } from './performance-optimization';
+import { FileIOBackend, ImageLoadOptions, ImageSaveOptions } from './file-io-backend';
 
 export class ColorSplash {
   private options: Required<ColorSplashOptions>;
@@ -25,6 +26,7 @@ export class ColorSplash {
   private performanceMonitor: PerformanceMonitor;
   private preloadedImage: ImageData | null = null;
   private lastConfig: Partial<SplashConfig> | null = null;
+  private fileIOBackend: FileIOBackend;
 
   constructor(options: ColorSplashOptions = {}) {
     // Set default options
@@ -40,6 +42,7 @@ export class ColorSplash {
 
     this.cache = new PreviewCache();
     this.performanceMonitor = new PerformanceMonitor();
+    this.fileIOBackend = new FileIOBackend();
   }
 
   /**
@@ -289,5 +292,194 @@ export class ColorSplash {
   convertToGrayscale(imageData: ImageData, method: GrayscaleMethod = GrayscaleMethod.LUMINANCE): ImageData {
     const { convertToGrayscale } = require('./image-processing');
     return convertToGrayscale(imageData, method);
+  }
+
+  // File I/O Methods
+
+  /**
+   * Load image from File object
+   * @param file File object to load
+   * @param options Loading options
+   * @returns Promise<ImageData> Loaded image data
+   */
+  async loadFromFile(file: File, options?: ImageLoadOptions): Promise<ImageData> {
+    const endTimer = this.performanceMonitor.startTimer('load_from_file');
+    try {
+      const imageData = await this.fileIOBackend.loadFromFile(file, options);
+      endTimer();
+      return imageData;
+    } catch (error) {
+      endTimer();
+      throw error;
+    }
+  }
+
+  /**
+   * Load image from URL
+   * @param url URL to load image from
+   * @param options Loading options
+   * @returns Promise<ImageData> Loaded image data
+   */
+  async loadFromUrl(url: string, options?: ImageLoadOptions): Promise<ImageData> {
+    const endTimer = this.performanceMonitor.startTimer('load_from_url');
+    try {
+      const imageData = await this.fileIOBackend.loadFromUrl(url, options);
+      endTimer();
+      return imageData;
+    } catch (error) {
+      endTimer();
+      throw error;
+    }
+  }
+
+  /**
+   * Load image from Base64 data URL
+   * @param dataUrl Base64 data URL
+   * @param options Loading options
+   * @returns Promise<ImageData> Loaded image data
+   */
+  async loadFromBase64(dataUrl: string, options?: ImageLoadOptions): Promise<ImageData> {
+    const endTimer = this.performanceMonitor.startTimer('load_from_base64');
+    try {
+      const imageData = await this.fileIOBackend.loadFromBase64(dataUrl, options);
+      endTimer();
+      return imageData;
+    } catch (error) {
+      endTimer();
+      throw error;
+    }
+  }
+
+  /**
+   * Load image from ArrayBuffer
+   * @param buffer ArrayBuffer containing image data
+   * @param options Loading options
+   * @returns Promise<ImageData> Loaded image data
+   */
+  async loadFromArrayBuffer(buffer: ArrayBuffer, options?: ImageLoadOptions): Promise<ImageData> {
+    const endTimer = this.performanceMonitor.startTimer('load_from_array_buffer');
+    try {
+      const imageData = await this.fileIOBackend.loadFromArrayBuffer(buffer, options);
+      endTimer();
+      return imageData;
+    } catch (error) {
+      endTimer();
+      throw error;
+    }
+  }
+
+  /**
+   * Save processed image as Blob
+   * @param imageData Processed image data
+   * @param options Save options
+   * @returns Promise<Blob> Image blob
+   */
+  async saveAsBlob(imageData: ImageData, options: ImageSaveOptions): Promise<Blob> {
+    const endTimer = this.performanceMonitor.startTimer('save_as_blob');
+    try {
+      const blob = await this.fileIOBackend.saveImageData(imageData, options);
+      endTimer();
+      return blob;
+    } catch (error) {
+      endTimer();
+      throw error;
+    }
+  }
+
+  /**
+   * Save processed image as Base64 data URL
+   * @param imageData Processed image data
+   * @param options Save options
+   * @returns Base64 data URL
+   */
+  saveAsBase64(imageData: ImageData, options: ImageSaveOptions): string {
+    const endTimer = this.performanceMonitor.startTimer('save_as_base64');
+    try {
+      const dataUrl = this.fileIOBackend.saveAsBase64(imageData, options);
+      endTimer();
+      return dataUrl;
+    } catch (error) {
+      endTimer();
+      throw error;
+    }
+  }
+
+  /**
+   * Download processed image as file
+   * @param imageData Processed image data
+   * @param options Save options with filename
+   */
+  async downloadImage(imageData: ImageData, options: ImageSaveOptions): Promise<void> {
+    const endTimer = this.performanceMonitor.startTimer('download_image');
+    try {
+      await this.fileIOBackend.downloadImage(imageData, options);
+      endTimer();
+    } catch (error) {
+      endTimer();
+      throw error;
+    }
+  }
+
+  /**
+   * Get supported image formats
+   * @returns Object with format support information
+   */
+  getSupportedFormats() {
+    return this.fileIOBackend.getSupportedFormats();
+  }
+
+  /**
+   * Check if a specific format is supported
+   * @param format Format to check (jpeg, png, webp)
+   * @returns Boolean indicating support
+   */
+  isFormatSupported(format: string): boolean {
+    return this.fileIOBackend.isFormatSupported(format);
+  }
+
+  /**
+   * Process image file with color splash and return result
+   * @param file Input file
+   * @param config Color splash configuration
+   * @param loadOptions Loading options
+   * @param saveOptions Save options
+   * @returns Promise<Blob> Processed image blob
+   */
+  async processFile(
+    file: File,
+    config: SplashConfig,
+    loadOptions?: ImageLoadOptions,
+    saveOptions?: ImageSaveOptions
+  ): Promise<Blob> {
+    const endTimer = this.performanceMonitor.startTimer('process_file');
+
+    try {
+      // Load image from file
+      const imageData = await this.loadFromFile(file, loadOptions);
+
+      // Apply color splash effect
+      const processedImageData = await this.applyColorSplash(imageData, config);
+
+      // Save as blob with specified options
+      const defaultSaveOptions: ImageSaveOptions = {
+        format: 'png',
+        quality: 0.92,
+        ...saveOptions
+      };
+
+      const blob = await this.saveAsBlob(processedImageData, defaultSaveOptions);
+      endTimer();
+      return blob;
+    } catch (error) {
+      endTimer();
+      throw error;
+    }
+  }
+
+  /**
+   * Cleanup file I/O resources
+   */
+  dispose(): void {
+    this.fileIOBackend.dispose();
   }
 }
