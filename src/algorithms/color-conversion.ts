@@ -46,7 +46,7 @@ export function rgbToHsv(rgb: Color): HSVColor {
   return {
     h: Math.round(h * 10) / 10, // Round to 1 decimal place
     s: Math.round(s * 10) / 10,
-    v: Math.round(v * 10) / 10
+    v: Math.round(v * 10) / 10,
   };
 }
 
@@ -95,7 +95,7 @@ export function hsvToRgb(hsv: HSVColor): Color {
   return {
     r: Math.round((rPrime + m) * 255),
     g: Math.round((gPrime + m) * 255),
-    b: Math.round((bPrime + m) * 255)
+    b: Math.round((bPrime + m) * 255),
   };
 }
 
@@ -117,26 +117,26 @@ export function rgbToLab(rgb: Color): LABColor {
 
   // Convert to XYZ using sRGB matrix
   let x = r * 0.4124564 + g * 0.3575761 + b * 0.1804375;
-  let y = r * 0.2126729 + g * 0.7151522 + b * 0.0721750;
-  let z = r * 0.0193339 + g * 0.1191920 + b * 0.9503041;
+  let y = r * 0.2126729 + g * 0.7151522 + b * 0.072175;
+  let z = r * 0.0193339 + g * 0.119192 + b * 0.9503041;
 
   // Normalize for D65 illuminant
   x = x / 0.95047;
-  y = y / 1.00000;
+  y = y / 1.0;
   z = z / 1.08883;
 
   // Apply LAB conversion
-  x = x > 0.008856 ? Math.pow(x, 1/3) : (7.787 * x + 16/116);
-  y = y > 0.008856 ? Math.pow(y, 1/3) : (7.787 * y + 16/116);
-  z = z > 0.008856 ? Math.pow(z, 1/3) : (7.787 * z + 16/116);
+  x = x > 0.008856 ? Math.pow(x, 1 / 3) : 7.787 * x + 16 / 116;
+  y = y > 0.008856 ? Math.pow(y, 1 / 3) : 7.787 * y + 16 / 116;
+  z = z > 0.008856 ? Math.pow(z, 1 / 3) : 7.787 * z + 16 / 116;
 
-  const l = (116 * y) - 16;
+  const l = 116 * y - 16;
   const a = 500 * (x - y);
   const bLab = 200 * (y - z);
 
   return {
     l: Math.round(l * 10) / 10,
     a: Math.round(a * 10) / 10,
-    b: Math.round(bLab * 10) / 10
+    b: Math.round(bLab * 10) / 10,
   };
 }

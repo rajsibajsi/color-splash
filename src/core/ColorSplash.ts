@@ -9,16 +9,18 @@ import {
   GrayscaleMethod,
   PreviewQuality,
   ColorSplashOptions,
-  SplashConfig
+  SplashConfig,
+  SelectionArea,
 } from '../types';
 import { applyColorSplash } from './image-processing';
 import {
   calculateOptimalPreviewSize,
   resizeImageData,
   PreviewCache,
-  PerformanceMonitor
+  PerformanceMonitor,
 } from './performance-optimization';
 import { FileIOBackend, ImageLoadOptions, ImageSaveOptions } from './file-io-backend';
+import { SelectionAreaProcessor } from './area-processor';
 
 export class ColorSplash {
   private options: Required<ColorSplashOptions>;
@@ -27,6 +29,7 @@ export class ColorSplash {
   private preloadedImage: ImageData | null = null;
   private lastConfig: Partial<SplashConfig> | null = null;
   private fileIOBackend: FileIOBackend;
+  private areaProcessor: SelectionAreaProcessor;
 
   constructor(options: ColorSplashOptions = {}) {
     // Set default options
@@ -37,12 +40,13 @@ export class ColorSplash {
       webWorkers: options.webWorkers || false,
       gpuAcceleration: options.gpuAcceleration || false,
       previewQuality: options.previewQuality || PreviewQuality.MEDIUM,
-      maxPreviewSize: options.maxPreviewSize || 500
+      maxPreviewSize: options.maxPreviewSize || 500,
     };
 
     this.cache = new PreviewCache();
     this.performanceMonitor = new PerformanceMonitor();
     this.fileIOBackend = new FileIOBackend();
+    this.areaProcessor = new SelectionAreaProcessor();
   }
 
   /**
@@ -69,7 +73,7 @@ export class ColorSplash {
     return {
       r: imageData.data[index]!,
       g: imageData.data[index + 1]!,
-      b: imageData.data[index + 2]!
+      b: imageData.data[index + 2]!,
     };
   }
 
@@ -106,12 +110,13 @@ export class ColorSplash {
     const endTimer = this.performanceMonitor.startTimer('create_fast_preview');
 
     // Generate cache key including quality
-    const cacheKey = this.cache.generateCacheKey(
-      imageData,
-      targetColors,
-      tolerance,
-      this.options.defaultColorSpace
-    ) + `_${quality}`;
+    const cacheKey =
+      this.cache.generateCacheKey(
+        imageData,
+        targetColors,
+        tolerance,
+        this.options.defaultColorSpace
+      ) + `_${quality}`;
 
     // Check cache first
     const cached = this.cache.get(cacheKey);
@@ -147,7 +152,7 @@ export class ColorSplash {
     this.lastConfig = {
       targetColors,
       tolerance,
-      colorSpace: this.options.defaultColorSpace
+      colorSpace: this.options.defaultColorSpace,
     };
 
     endTimer();
@@ -169,7 +174,7 @@ export class ColorSplash {
     // Merge with last configuration
     const fullConfig = {
       ...this.lastConfig,
-      ...partialConfig
+      ...partialConfig,
     };
 
     const targetColors = fullConfig.targetColors || [];
@@ -256,7 +261,9 @@ export class ColorSplash {
   /**
    * Get performance statistics
    */
-  getPerformanceStats(): { [operationName: string]: { average: number; min: number; max: number; count: number } | null } {
+  getPerformanceStats(): {
+    [operationName: string]: { average: number; min: number; max: number; count: number } | null;
+  } {
     return this.performanceMonitor.getAllStats();
   }
 
@@ -280,7 +287,7 @@ export class ColorSplash {
   getCacheStats(): { size: number; maxSize: number } {
     return {
       size: this.cache.size(),
-      maxSize: 20 // Current max cache size
+      maxSize: 20, // Current max cache size
     };
   }
 
@@ -289,7 +296,12 @@ export class ColorSplash {
    * @param imageData Source image data
    * @param method Grayscale method (optional)
    */
-  convertToGrayscale(imageData: ImageData, method: GrayscaleMethod = GrayscaleMethod.LUMINANCE): ImageData {
+  convertToGrayscale(
+    imageData: ImageData,
+    method: GrayscaleMethod = GrayscaleMethod.LUMINANCE
+  ): ImageData {
+    // Import dynamically to avoid circular dependency
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { convertToGrayscale } = require('./image-processing');
     return convertToGrayscale(imageData, method);
   }
@@ -464,7 +476,7 @@ export class ColorSplash {
       const defaultSaveOptions: ImageSaveOptions = {
         format: 'png',
         quality: 0.92,
-        ...saveOptions
+        ...saveOptions,
       };
 
       const blob = await this.saveAsBlob(processedImageData, defaultSaveOptions);
@@ -481,5 +493,119 @@ export class ColorSplash {
    */
   dispose(): void {
     this.fileIOBackend.dispose();
+  }
+
+  // Selection Area Methods
+
+  /**
+   * Create a selection area mask for the specified region
+   * @param width Image width
+   * @param height Image height
+   * @param area Selection area definition
+   * @returns Boolean mask array
+   */
+  createSelectionMask(width: number, height: number, area: SelectionArea): boolean[] {
+    return this.areaProcessor.createSelectionMask(width, height, area);
+  }
+
+  /**
+   * Create an alpha mask with optional feathering for the specified region
+   * @param width Image width
+   * @param height Image height
+   * @param area Selection area definition
+   * @returns Alpha mask array (0-1 values)
+   */
+  createAlphaMask(width: number, height: number, area: SelectionArea): number[] {
+    return this.areaProcessor.createAlphaMask(width, height, area);
+  }
+
+  /**
+   * Apply selection area to ImageData, preserving only selected regions
+   * @param imageData Source image data
+   * @param area Selection area definition
+   * @param outsideColor Color to use for non-selected areas (default: transparent)
+   * @returns New ImageData with selection applied
+   */
+  applySelectionToImageData(
+    imageData: ImageData,
+    area: SelectionArea,
+    outsideColor?: { r: number; g: number; b: number; a: number }
+  ): ImageData {
+    return this.areaProcessor.applySelectionToImageData(imageData, area, outsideColor);
+  }
+
+  /**
+   * Apply color splash effect within a specific selection area
+   * @param imageData Source image data
+   * @param area Selection area to apply effect within
+   * @param config Color splash configuration
+   * @returns ImageData with color splash applied only within the selection area
+   */
+  async applyColorSplashInSelection(
+    imageData: ImageData,
+    area: SelectionArea,
+    config: SplashConfig
+  ): Promise<ImageData> {
+    const endTimer = this.performanceMonitor.startTimer('apply_color_splash_in_selection');
+
+    // Create alpha mask for the selection area
+    const alphaMask = this.areaProcessor.createAlphaMask(imageData.width, imageData.height, area);
+
+    // Apply color splash to the entire image
+    const splashedImage = await this.applyColorSplash(imageData, config);
+
+    // Blend the splashed image with the original based on selection mask
+    const result = new ImageData(imageData.width, imageData.height);
+
+    for (let i = 0; i < imageData.data.length; i += 4) {
+      const pixelIndex = Math.floor(i / 4);
+      const alpha = alphaMask[pixelIndex]!;
+
+      if (alpha === 1) {
+        // Fully inside selection - use splashed version
+        result.data[i] = splashedImage.data[i]!; // R
+        result.data[i + 1] = splashedImage.data[i + 1]!; // G
+        result.data[i + 2] = splashedImage.data[i + 2]!; // B
+        result.data[i + 3] = splashedImage.data[i + 3]!; // A
+      } else if (alpha === 0) {
+        // Fully outside selection - use original
+        result.data[i] = imageData.data[i]!; // R
+        result.data[i + 1] = imageData.data[i + 1]!; // G
+        result.data[i + 2] = imageData.data[i + 2]!; // B
+        result.data[i + 3] = imageData.data[i + 3]!; // A
+      } else {
+        // Feathered edge - blend between original and splashed
+        const originalR = imageData.data[i]!;
+        const originalG = imageData.data[i + 1]!;
+        const originalB = imageData.data[i + 2]!;
+        const originalA = imageData.data[i + 3]!;
+
+        const splashedR = splashedImage.data[i]!;
+        const splashedG = splashedImage.data[i + 1]!;
+        const splashedB = splashedImage.data[i + 2]!;
+        const splashedA = splashedImage.data[i + 3]!;
+
+        const alphaValue = alphaMask[pixelIndex]!;
+
+        result.data[i] = Math.round(originalR * (1 - alphaValue) + splashedR * alphaValue);
+        result.data[i + 1] = Math.round(originalG * (1 - alphaValue) + splashedG * alphaValue);
+        result.data[i + 2] = Math.round(originalB * (1 - alphaValue) + splashedB * alphaValue);
+        result.data[i + 3] = Math.round(originalA * (1 - alphaValue) + splashedA * alphaValue);
+      }
+    }
+
+    endTimer();
+    return result;
+  }
+
+  /**
+   * Check if a point is inside the specified selection area
+   * @param x X coordinate
+   * @param y Y coordinate
+   * @param area Selection area definition
+   * @returns true if point is inside the area
+   */
+  isPointInArea(x: number, y: number, area: SelectionArea): boolean {
+    return this.areaProcessor.isPointInArea(x, y, area);
   }
 }

@@ -2,7 +2,7 @@ module.exports = {
   parser: '@typescript-eslint/parser',
   extends: [
     'eslint:recommended',
-    '@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended',
     'prettier'
   ],
   plugins: [
@@ -25,8 +25,9 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': 'error',
     '@typescript-eslint/explicit-function-return-type': 'warn',
     '@typescript-eslint/no-explicit-any': 'error',
-    '@typescript-eslint/prefer-const': 'error',
-    'no-console': 'warn'
+    '@typescript-eslint/no-var-requires': 'error',
+    'no-console': 'warn',
+    'no-case-declarations': 'error'
   },
   ignorePatterns: [
     'dist/',

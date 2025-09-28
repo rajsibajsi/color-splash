@@ -90,9 +90,7 @@ function isColorSimilarLAB(color1: Color, color2: Color, tolerance: ColorToleran
   const lab2 = rgbToLab(color2);
 
   const distance = Math.sqrt(
-    Math.pow(lab1.l - lab2.l, 2) +
-    Math.pow(lab1.a - lab2.a, 2) +
-    Math.pow(lab1.b - lab2.b, 2)
+    Math.pow(lab1.l - lab2.l, 2) + Math.pow(lab1.a - lab2.a, 2) + Math.pow(lab1.b - lab2.b, 2)
   );
 
   return tolerance.euclidean === undefined || distance <= tolerance.euclidean;
@@ -104,8 +102,8 @@ function isColorSimilarLAB(color1: Color, color2: Color, tolerance: ColorToleran
 function isColorSimilarRGB(color1: Color, color2: Color, tolerance: ColorTolerance): boolean {
   const distance = Math.sqrt(
     Math.pow(color1.r - color2.r, 2) +
-    Math.pow(color1.g - color2.g, 2) +
-    Math.pow(color1.b - color2.b, 2)
+      Math.pow(color1.g - color2.g, 2) +
+      Math.pow(color1.b - color2.b, 2)
   );
 
   return tolerance.euclidean === undefined || distance <= tolerance.euclidean;
@@ -121,7 +119,7 @@ function calculateHSVDistance(color1: Color, color2: Color): ColorDistance {
   return {
     hue: calculateHueDifference(hsv1.h, hsv2.h),
     saturation: Math.abs(hsv1.s - hsv2.s),
-    value: Math.abs(hsv1.v - hsv2.v)
+    value: Math.abs(hsv1.v - hsv2.v),
   };
 }
 
@@ -133,9 +131,7 @@ function calculateLABDistance(color1: Color, color2: Color): ColorDistance {
   const lab2 = rgbToLab(color2);
 
   const euclidean = Math.sqrt(
-    Math.pow(lab1.l - lab2.l, 2) +
-    Math.pow(lab1.a - lab2.a, 2) +
-    Math.pow(lab1.b - lab2.b, 2)
+    Math.pow(lab1.l - lab2.l, 2) + Math.pow(lab1.a - lab2.a, 2) + Math.pow(lab1.b - lab2.b, 2)
   );
 
   return { euclidean: Math.round(euclidean * 10) / 10 };
@@ -147,8 +143,8 @@ function calculateLABDistance(color1: Color, color2: Color): ColorDistance {
 function calculateRGBDistance(color1: Color, color2: Color): ColorDistance {
   const euclidean = Math.sqrt(
     Math.pow(color1.r - color2.r, 2) +
-    Math.pow(color1.g - color2.g, 2) +
-    Math.pow(color1.b - color2.b, 2)
+      Math.pow(color1.g - color2.g, 2) +
+      Math.pow(color1.b - color2.b, 2)
   );
 
   return { euclidean: Math.round(euclidean * 100) / 100 };

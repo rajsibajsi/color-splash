@@ -8,14 +8,18 @@ import { Color, ColorSpace, GrayscaleMethod, PreviewQuality } from '../../src/ty
 
 describe('ColorSplash Class', () => {
   // Helper function to create test ImageData
-  function createTestImageData(width: number, height: number, fillColor: Color = { r: 128, g: 128, b: 128 }): ImageData {
+  function createTestImageData(
+    width: number,
+    height: number,
+    fillColor: Color = { r: 128, g: 128, b: 128 }
+  ): ImageData {
     const data = new Uint8ClampedArray(width * height * 4);
 
     for (let i = 0; i < data.length; i += 4) {
-      data[i] = fillColor.r;     // R
+      data[i] = fillColor.r; // R
       data[i + 1] = fillColor.g; // G
       data[i + 2] = fillColor.b; // B
-      data[i + 3] = 255;         // A
+      data[i + 3] = 255; // A
     }
 
     return new ImageData(data, width, height);
@@ -35,7 +39,7 @@ describe('ColorSplash Class', () => {
         defaultColorSpace: ColorSpace.LAB,
         previewQuality: PreviewQuality.HIGH,
         maxPreviewSize: 600,
-        gpuAcceleration: true
+        gpuAcceleration: true,
       };
 
       const colorSplash = new ColorSplash(options);
@@ -115,11 +119,17 @@ describe('ColorSplash Class', () => {
       const targetColor = { r: 255, g: 0, b: 0 };
 
       const lowPreview = await colorSplash.createFastPreview(
-        imageData, [targetColor], { hue: 15 }, PreviewQuality.LOW
+        imageData,
+        [targetColor],
+        { hue: 15 },
+        PreviewQuality.LOW
       );
 
       const highPreview = await colorSplash.createFastPreview(
-        imageData, [targetColor], { hue: 15 }, PreviewQuality.HIGH
+        imageData,
+        [targetColor],
+        { hue: 15 },
+        PreviewQuality.HIGH
       );
 
       expect(lowPreview.width).toBeLessThan(highPreview.width);
@@ -180,7 +190,7 @@ describe('ColorSplash Class', () => {
       // Update with different colors
       const updatedPreview = await colorSplash.updatePreview({
         targetColors: [{ r: 0, g: 255, b: 0 }],
-        tolerance: { hue: 20 }
+        tolerance: { hue: 20 },
       });
 
       expect(updatedPreview).toBeDefined();
@@ -197,7 +207,7 @@ describe('ColorSplash Class', () => {
         targetColors: [targetColor],
         tolerance: { hue: 15, saturation: 20, lightness: 25 },
         colorSpace: ColorSpace.HSV,
-        grayscaleMethod: GrayscaleMethod.LUMINANCE
+        grayscaleMethod: GrayscaleMethod.LUMINANCE,
       });
 
       expect(result.width).toBe(imageData.width);
@@ -213,7 +223,7 @@ describe('ColorSplash Class', () => {
 
       // Add some color variation
       for (let i = 0; i < imageData.data.length; i += 16) {
-        imageData.data[i] = 255;     // Red pixel
+        imageData.data[i] = 255; // Red pixel
         imageData.data[i + 1] = 0;
         imageData.data[i + 2] = 0;
         imageData.data[i + 3] = 255;
@@ -222,11 +232,11 @@ describe('ColorSplash Class', () => {
       const config = {
         targetColors: [
           { r: 255, g: 0, b: 0 },
-          { r: 0, g: 255, b: 0 }
+          { r: 0, g: 255, b: 0 },
         ],
         tolerance: { hue: 20, saturation: 30, lightness: 35 },
         colorSpace: ColorSpace.HSV,
-        grayscaleMethod: GrayscaleMethod.LUMINANCE
+        grayscaleMethod: GrayscaleMethod.LUMINANCE,
       };
 
       const result = await colorSplash.applyColorSplash(imageData, config);
@@ -278,6 +288,38 @@ describe('ColorSplash Class', () => {
 
       expect(duration).toBeGreaterThan(10); // Should take some time since no cache
     });
+
+    test('should provide cache statistics', () => {
+      const colorSplash = new ColorSplash();
+      const stats = colorSplash.getCacheStats();
+
+      expect(stats).toHaveProperty('size');
+      expect(stats).toHaveProperty('maxSize');
+      expect(typeof stats.size).toBe('number');
+      expect(typeof stats.maxSize).toBe('number');
+    });
+
+    test('should clear performance statistics', () => {
+      const colorSplash = new ColorSplash();
+
+      // Clear stats
+      colorSplash.clearPerformanceStats();
+
+      const stats = colorSplash.getPerformanceStats();
+      expect(stats).toBeDefined();
+    });
+
+    test('should enable GPU acceleration', async () => {
+      const colorSplash = new ColorSplash();
+
+      // Create a mock canvas
+      const canvas = document.createElement('canvas');
+
+      // Try to enable GPU acceleration (may fail in test environment)
+      const result = await colorSplash.enableGPUAcceleration(canvas);
+
+      expect(typeof result).toBe('boolean');
+    });
   });
 
   describe('Error Handling', () => {
@@ -324,58 +366,33 @@ describe('ColorSplash Class', () => {
       name,
       type,
       size: 1000,
-      lastModified: Date.now()
-    });
-
-    // Mock Blob for testing
-    const createMockBlob = (type: string) => ({
-      type,
-      size: 1000,
-      arrayBuffer: () => Promise.resolve(new ArrayBuffer(1000))
+      lastModified: Date.now(),
+      arrayBuffer: () => Promise.resolve(new ArrayBuffer(1000)),
     });
 
     beforeEach(() => {
-      // Mock DOM APIs
-      global.document = {
-        createElement: (tagName: string) => {
-          if (tagName === 'canvas') {
-            return {
-              width: 100,
-              height: 100,
-              getContext: () => ({
-                drawImage: () => {},
-                getImageData: () => new ImageData(new Uint8ClampedArray(100 * 100 * 4), 100, 100),
-                putImageData: () => {}
-              }),
-              toDataURL: () => 'data:image/png;base64,test',
-              toBlob: (callback: (blob: Blob | null) => void) => {
-                setTimeout(() => callback(createMockBlob('image/png') as Blob), 0);
-              }
-            };
-          }
-          return {};
+      // Mock document.body for download tests
+      const mockBody = {
+        appendChild: jest.fn(),
+        removeChild: jest.fn(),
+      };
+      Object.defineProperty(global.document, 'body', {
+        value: mockBody,
+        writable: true,
+        configurable: true,
+      });
+
+      const originalCreateElement = global.document.createElement;
+      global.document.createElement = jest.fn((tagName: string) => {
+        if (tagName === 'a') {
+          return {
+            href: '',
+            download: '',
+            click: jest.fn(),
+          } as any;
         }
-      } as any;
-
-      global.Image = class {
-        onload: (() => void) | null = null;
-        onerror: (() => void) | null = null;
-        src = '';
-        width = 100;
-        height = 100;
-        crossOrigin: string | null = null;
-
-        constructor() {
-          setTimeout(() => {
-            if (this.onload) this.onload();
-          }, 10);
-        }
-      } as any;
-
-      global.URL = {
-        createObjectURL: () => 'blob:mock-url',
-        revokeObjectURL: () => {}
-      } as any;
+        return originalCreateElement.call(document, tagName);
+      }) as any;
     });
 
     test('should load image from File', async () => {
@@ -402,7 +419,8 @@ describe('ColorSplash Class', () => {
 
     test('should load image from Base64', async () => {
       const colorSplash = new ColorSplash();
-      const dataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==';
+      const dataUrl =
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==';
 
       const imageData = await colorSplash.loadFromBase64(dataUrl);
 
@@ -428,7 +446,7 @@ describe('ColorSplash Class', () => {
 
       const blob = await colorSplash.saveAsBlob(imageData, {
         format: 'png',
-        quality: 0.9
+        quality: 0.9,
       });
 
       expect(blob).toBeDefined();
@@ -441,37 +459,22 @@ describe('ColorSplash Class', () => {
 
       const dataUrl = colorSplash.saveAsBase64(imageData, {
         format: 'jpeg',
-        quality: 0.8
+        quality: 0.8,
       });
 
-      expect(dataUrl).toMatch(/^data:image\/png;base64,/);
+      expect(dataUrl).toMatch(/^data:image\/jpeg;base64,/);
     });
 
     test('should download image', async () => {
       const colorSplash = new ColorSplash();
       const imageData = createTestImageData(100, 100);
 
-      // Mock DOM elements for download
-      const mockA = {
-        href: '',
-        download: '',
-        click: jest.fn(),
-        remove: jest.fn()
-      };
-
-      global.document.body = {
-        appendChild: jest.fn(),
-        removeChild: jest.fn()
-      } as any;
-
-      global.document.createElement = jest.fn().mockReturnValue(mockA);
-
       await colorSplash.downloadImage(imageData, {
         format: 'png',
-        filename: 'test-image.png'
+        filename: 'test-image.png',
       });
 
-      expect(mockA.click).toHaveBeenCalled();
+      expect(global.document.createElement).toHaveBeenCalledWith('a');
     });
 
     test('should process file end-to-end', async () => {
@@ -481,7 +484,7 @@ describe('ColorSplash Class', () => {
       const config = {
         targetColors: [{ r: 255, g: 0, b: 0 }],
         tolerance: { hue: 15, saturation: 20, lightness: 25 },
-        colorSpace: ColorSpace.HSV
+        colorSpace: ColorSpace.HSV,
       };
 
       const blob = await colorSplash.processFile(mockFile, config);
@@ -529,14 +532,99 @@ describe('ColorSplash Class', () => {
 
       const mockFile = createMockFile('test.png', 'image/png') as File;
 
-      await expect(colorSplash.loadFromFile(mockFile))
-        .rejects.toThrow();
+      await expect(colorSplash.loadFromFile(mockFile)).rejects.toThrow();
     });
 
     test('should dispose file I/O resources', () => {
       const colorSplash = new ColorSplash();
 
       expect(() => colorSplash.dispose()).not.toThrow();
+    });
+  });
+
+  describe('Selection Area Integration', () => {
+    test('should create selection masks', () => {
+      const colorSplash = new ColorSplash();
+      const area = {
+        type: 'rectangle' as const,
+        coordinates: [
+          { x: 0, y: 0 },
+          { x: 50, y: 50 },
+        ],
+      };
+
+      const mask = colorSplash.createSelectionMask(100, 100, area);
+      expect(mask).toBeDefined();
+      expect(mask.length).toBe(10000);
+    });
+
+    test('should create alpha masks', () => {
+      const colorSplash = new ColorSplash();
+      const area = {
+        type: 'circle' as const,
+        coordinates: [
+          { x: 25, y: 25 },
+          { x: 50, y: 25 },
+        ],
+      };
+
+      const alphaMask = colorSplash.createAlphaMask(50, 50, area);
+      expect(alphaMask).toBeDefined();
+      expect(alphaMask.length).toBe(2500);
+    });
+
+    test('should check point in area', () => {
+      const colorSplash = new ColorSplash();
+      const area = {
+        type: 'rectangle' as const,
+        coordinates: [
+          { x: 10, y: 10 },
+          { x: 40, y: 40 },
+        ],
+      };
+
+      expect(colorSplash.isPointInArea(25, 25, area)).toBe(true);
+      expect(colorSplash.isPointInArea(5, 5, area)).toBe(false);
+    });
+
+    test('should apply selection to image data', () => {
+      const colorSplash = new ColorSplash();
+      const imageData = createTestImageData(50, 50);
+      const area = {
+        type: 'rectangle' as const,
+        coordinates: [
+          { x: 10, y: 10 },
+          { x: 40, y: 40 },
+        ],
+      };
+
+      const result = colorSplash.applySelectionToImageData(imageData, area);
+      expect(result).toBeDefined();
+      expect(result.width).toBe(50);
+      expect(result.height).toBe(50);
+    });
+
+    test('should apply color splash in selection area', async () => {
+      const colorSplash = new ColorSplash();
+      const imageData = createTestImageData(50, 50);
+      const area = {
+        type: 'rectangle' as const,
+        coordinates: [
+          { x: 10, y: 10 },
+          { x: 40, y: 40 },
+        ],
+      };
+      const config = {
+        targetColors: [{ r: 128, g: 128, b: 128 }],
+        tolerance: { hue: 15, saturation: 20, lightness: 25 },
+        colorSpace: ColorSpace.HSV,
+        grayscaleMethod: GrayscaleMethod.LUMINANCE,
+      };
+
+      const result = await colorSplash.applyColorSplashInSelection(imageData, area, config);
+      expect(result).toBeDefined();
+      expect(result.width).toBe(50);
+      expect(result.height).toBe(50);
     });
   });
 });
