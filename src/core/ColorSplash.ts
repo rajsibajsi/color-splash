@@ -19,7 +19,12 @@ import {
   PreviewCache,
   PerformanceMonitor,
 } from './performance-optimization';
-import { FileIOBackend, ImageLoadOptions, ImageSaveOptions, FileFormatSupport } from './file-io-backend';
+import {
+  FileIOBackend,
+  ImageLoadOptions,
+  ImageSaveOptions,
+  FileFormatSupport,
+} from './file-io-backend';
 import { SelectionAreaProcessor } from './area-processor';
 
 export class ColorSplash {
