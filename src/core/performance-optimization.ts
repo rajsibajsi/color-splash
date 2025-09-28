@@ -38,7 +38,7 @@ export function resizeImageData(
       const targetIndex = (targetY * targetWidth + targetX) * 4;
 
       // Copy pixel data
-      targetData[targetIndex] = sourceData[sourceIndex]!;         // R
+      targetData[targetIndex] = sourceData[sourceIndex]!; // R
       targetData[targetIndex + 1] = sourceData[sourceIndex + 1]!; // G
       targetData[targetIndex + 2] = sourceData[sourceIndex + 2]!; // B
       targetData[targetIndex + 3] = sourceData[sourceIndex + 3]!; // A
@@ -70,22 +70,25 @@ export function calculateOptimalPreviewSize(
       scaleFactor = 0.125; // 1/8 resolution
       break;
     case PreviewQuality.MEDIUM:
-      scaleFactor = 0.25;  // 1/4 resolution
+      scaleFactor = 0.25; // 1/4 resolution
       break;
     case PreviewQuality.HIGH:
-      scaleFactor = 0.5;   // 1/2 resolution
+      scaleFactor = 0.5; // 1/2 resolution
       break;
-    case PreviewQuality.REALTIME:
+    case PreviewQuality.REALTIME: {
       // Dynamic scaling based on image size
       const pixelCount = originalWidth * originalHeight;
-      if (pixelCount > 2000000) { // > 2MP
+      if (pixelCount > 2000000) {
+        // > 2MP
         scaleFactor = 0.125;
-      } else if (pixelCount > 500000) { // > 0.5MP
+      } else if (pixelCount > 500000) {
+        // > 0.5MP
         scaleFactor = 0.25;
       } else {
         scaleFactor = 0.5;
       }
       break;
+    }
     default:
       scaleFactor = 0.25;
   }
@@ -137,11 +140,7 @@ export async function createFastPreview(
   quality: PreviewQuality
 ): Promise<ImageData> {
   // Calculate optimal preview size
-  const previewSize = calculateOptimalPreviewSize(
-    imageData.width,
-    imageData.height,
-    quality
-  );
+  const previewSize = calculateOptimalPreviewSize(imageData.width, imageData.height, quality);
 
   // Resize image for faster processing
   const resizedImage = resizeImageData(imageData, previewSize.width, previewSize.height);
@@ -180,9 +179,7 @@ export class PreviewCache {
   ): string {
     // Create a hash-like key from parameters
     const imageKey = `${imageData.width}x${imageData.height}`;
-    const colorsKey = targetColors
-      .map(c => `${c.r}${c.g}${c.b}`)
-      .join(',');
+    const colorsKey = targetColors.map((c) => `${c.r}${c.g}${c.b}`).join(',');
     const toleranceKey = `h${tolerance.hue || 0}s${tolerance.saturation || 0}l${tolerance.lightness || 0}e${tolerance.euclidean || 0}`;
 
     return `${imageKey}_${colorsKey}_${toleranceKey}_${colorSpace}`;
@@ -283,15 +280,19 @@ export class PerformanceMonitor {
       average: Math.round(average * 100) / 100,
       min: Math.round(min * 100) / 100,
       max: Math.round(max * 100) / 100,
-      count: measurements.length
+      count: measurements.length,
     };
   }
 
   /**
    * Get all performance statistics
    */
-  getAllStats(): { [operationName: string]: { average: number; min: number; max: number; count: number } | null } {
-    const stats: { [key: string]: { average: number; min: number; max: number; count: number } | null } = {};
+  getAllStats(): {
+    [operationName: string]: { average: number; min: number; max: number; count: number } | null;
+  } {
+    const stats: {
+      [key: string]: { average: number; min: number; max: number; count: number } | null;
+    } = {};
 
     for (const operationName of this.measurements.keys()) {
       stats[operationName] = this.getStats(operationName);
