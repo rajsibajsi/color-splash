@@ -19,7 +19,7 @@ import {
   PreviewCache,
   PerformanceMonitor,
 } from './performance-optimization';
-import { FileIOBackend, ImageLoadOptions, ImageSaveOptions } from './file-io-backend';
+import { FileIOBackend, ImageLoadOptions, ImageSaveOptions, FileFormatSupport } from './file-io-backend';
 import { SelectionAreaProcessor } from './area-processor';
 
 export class ColorSplash {
@@ -436,7 +436,7 @@ export class ColorSplash {
    * Get supported image formats
    * @returns Object with format support information
    */
-  getSupportedFormats() {
+  getSupportedFormats(): FileFormatSupport {
     return this.fileIOBackend.getSupportedFormats();
   }
 

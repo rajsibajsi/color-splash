@@ -47,7 +47,7 @@ export class FileIOBackend {
       png: canvas.toDataURL('image/png').indexOf('data:image/png') === 0,
       webp: canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0,
       gif: false, // GIF writing not typically supported via canvas
-      bmp: false  // BMP not supported via canvas
+      bmp: false, // BMP not supported via canvas
     };
   }
 
@@ -87,10 +87,10 @@ export class FileIOBackend {
 
       const img = new Image();
 
-      img.onload = () => {
+      img.onload = (): void => {
         try {
           // Calculate dimensions with optional constraints
-          let { width, height } = this.calculateDimensions(
+          const { width, height } = this.calculateDimensions(
             img.width,
             img.height,
             options.maxWidth,
@@ -110,7 +110,7 @@ export class FileIOBackend {
         }
       };
 
-      img.onerror = () => {
+      img.onerror = (): void => {
         reject(new Error('Failed to load image file'));
       };
 
@@ -134,10 +134,10 @@ export class FileIOBackend {
       // Handle CORS for external URLs
       img.crossOrigin = 'anonymous';
 
-      img.onload = () => {
+      img.onload = (): void => {
         try {
           // Calculate dimensions with optional constraints
-          let { width, height } = this.calculateDimensions(
+          const { width, height } = this.calculateDimensions(
             img.width,
             img.height,
             options.maxWidth,
@@ -157,7 +157,7 @@ export class FileIOBackend {
         }
       };
 
-      img.onerror = () => {
+      img.onerror = (): void => {
         reject(new Error(`Failed to load image from URL: ${url}`));
       };
 
@@ -181,10 +181,10 @@ export class FileIOBackend {
 
       const img = new Image();
 
-      img.onload = () => {
+      img.onload = (): void => {
         try {
           // Calculate dimensions with optional constraints
-          let { width, height } = this.calculateDimensions(
+          const { width, height } = this.calculateDimensions(
             img.width,
             img.height,
             options.maxWidth,
@@ -204,7 +204,7 @@ export class FileIOBackend {
         }
       };
 
-      img.onerror = () => {
+      img.onerror = (): void => {
         reject(new Error('Failed to load Base64 image data'));
       };
 
@@ -215,7 +215,10 @@ export class FileIOBackend {
   /**
    * Load image from ArrayBuffer
    */
-  async loadFromArrayBuffer(buffer: ArrayBuffer, options: ImageLoadOptions = {}): Promise<ImageData> {
+  async loadFromArrayBuffer(
+    buffer: ArrayBuffer,
+    options: ImageLoadOptions = {}
+  ): Promise<ImageData> {
     // Create blob from ArrayBuffer
     const blob = new Blob([buffer]);
     const url = URL.createObjectURL(blob);
@@ -280,10 +283,7 @@ export class FileIOBackend {
     this.context.putImageData(imageData, 0, 0);
 
     // Convert to data URL
-    return this.canvas.toDataURL(
-      this.getMimeType(options.format),
-      options.quality || 0.92
-    );
+    return this.canvas.toDataURL(this.getMimeType(options.format), options.quality || 0.92);
   }
 
   /**
@@ -366,7 +366,10 @@ export class FileIOBackend {
 }
 
 // Convenience functions for direct usage
-export async function loadImageFromFile(file: File, options?: ImageLoadOptions): Promise<ImageData> {
+export async function loadImageFromFile(
+  file: File,
+  options?: ImageLoadOptions
+): Promise<ImageData> {
   const backend = new FileIOBackend();
   try {
     return await backend.loadFromFile(file, options);
@@ -375,7 +378,10 @@ export async function loadImageFromFile(file: File, options?: ImageLoadOptions):
   }
 }
 
-export async function loadImageFromUrl(url: string, options?: ImageLoadOptions): Promise<ImageData> {
+export async function loadImageFromUrl(
+  url: string,
+  options?: ImageLoadOptions
+): Promise<ImageData> {
   const backend = new FileIOBackend();
   try {
     return await backend.loadFromUrl(url, options);
@@ -384,7 +390,10 @@ export async function loadImageFromUrl(url: string, options?: ImageLoadOptions):
   }
 }
 
-export async function loadImageFromBase64(dataUrl: string, options?: ImageLoadOptions): Promise<ImageData> {
+export async function loadImageFromBase64(
+  dataUrl: string,
+  options?: ImageLoadOptions
+): Promise<ImageData> {
   const backend = new FileIOBackend();
   try {
     return await backend.loadFromBase64(dataUrl, options);
@@ -393,7 +402,10 @@ export async function loadImageFromBase64(dataUrl: string, options?: ImageLoadOp
   }
 }
 
-export async function saveImageAsBlob(imageData: ImageData, options: ImageSaveOptions): Promise<Blob> {
+export async function saveImageAsBlob(
+  imageData: ImageData,
+  options: ImageSaveOptions
+): Promise<Blob> {
   const backend = new FileIOBackend();
   try {
     return await backend.saveImageData(imageData, options);
