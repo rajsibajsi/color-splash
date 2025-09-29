@@ -360,6 +360,188 @@ describe('ColorSplash Class', () => {
     });
   });
 
+  describe('File I/O Integration', () => {
+    // Mock File for testing
+    const createMockFile = (name: string, type: string) => ({
+      name,
+      type,
+      size: 1000,
+      lastModified: Date.now(),
+      arrayBuffer: () => Promise.resolve(new ArrayBuffer(1000)),
+    });
+
+    beforeEach(() => {
+      // Mock document.body for download tests
+      const mockBody = {
+        appendChild: jest.fn(),
+        removeChild: jest.fn(),
+      };
+      Object.defineProperty(global.document, 'body', {
+        value: mockBody,
+        writable: true,
+        configurable: true,
+      });
+
+      const originalCreateElement = global.document.createElement;
+      global.document.createElement = jest.fn((tagName: string) => {
+        if (tagName === 'a') {
+          return {
+            href: '',
+            download: '',
+            click: jest.fn(),
+          } as any;
+        }
+        return originalCreateElement.call(document, tagName);
+      }) as any;
+    });
+
+    test('should load image from File', async () => {
+      const colorSplash = new ColorSplash();
+      const mockFile = createMockFile('test.png', 'image/png') as File;
+
+      const imageData = await colorSplash.loadFromFile(mockFile);
+
+      expect(imageData).toBeInstanceOf(ImageData);
+      expect(imageData.width).toBe(100);
+      expect(imageData.height).toBe(100);
+    });
+
+    test('should load image from URL', async () => {
+      const colorSplash = new ColorSplash();
+      const url = 'https://example.com/image.jpg';
+
+      const imageData = await colorSplash.loadFromUrl(url);
+
+      expect(imageData).toBeInstanceOf(ImageData);
+      expect(imageData.width).toBe(100);
+      expect(imageData.height).toBe(100);
+    });
+
+    test('should load image from Base64', async () => {
+      const colorSplash = new ColorSplash();
+      const dataUrl =
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==';
+
+      const imageData = await colorSplash.loadFromBase64(dataUrl);
+
+      expect(imageData).toBeInstanceOf(ImageData);
+      expect(imageData.width).toBe(100);
+      expect(imageData.height).toBe(100);
+    });
+
+    test('should load image from ArrayBuffer', async () => {
+      const colorSplash = new ColorSplash();
+      const buffer = new ArrayBuffer(1000);
+
+      const imageData = await colorSplash.loadFromArrayBuffer(buffer);
+
+      expect(imageData).toBeInstanceOf(ImageData);
+      expect(imageData.width).toBe(100);
+      expect(imageData.height).toBe(100);
+    });
+
+    test('should save image as Blob', async () => {
+      const colorSplash = new ColorSplash();
+      const imageData = createTestImageData(100, 100);
+
+      const blob = await colorSplash.saveAsBlob(imageData, {
+        format: 'png',
+        quality: 0.9,
+      });
+
+      expect(blob).toBeDefined();
+      expect(blob.type).toBe('image/png');
+    });
+
+    test('should save image as Base64', () => {
+      const colorSplash = new ColorSplash();
+      const imageData = createTestImageData(100, 100);
+
+      const dataUrl = colorSplash.saveAsBase64(imageData, {
+        format: 'jpeg',
+        quality: 0.8,
+      });
+
+      expect(dataUrl).toMatch(/^data:image\/jpeg;base64,/);
+    });
+
+    test('should download image', async () => {
+      const colorSplash = new ColorSplash();
+      const imageData = createTestImageData(100, 100);
+
+      await colorSplash.downloadImage(imageData, {
+        format: 'png',
+        filename: 'test-image.png',
+      });
+
+      expect(global.document.createElement).toHaveBeenCalledWith('a');
+    });
+
+    test('should process file end-to-end', async () => {
+      const colorSplash = new ColorSplash();
+      const mockFile = createMockFile('test.jpg', 'image/jpeg') as File;
+
+      const config = {
+        targetColors: [{ r: 255, g: 0, b: 0 }],
+        tolerance: { hue: 15, saturation: 20, lightness: 25 },
+        colorSpace: ColorSpace.HSV,
+      };
+
+      const blob = await colorSplash.processFile(mockFile, config);
+
+      expect(blob).toBeDefined();
+      expect(blob.type).toBe('image/png'); // Default format
+    });
+
+    test('should get supported formats', () => {
+      const colorSplash = new ColorSplash();
+
+      const formats = colorSplash.getSupportedFormats();
+
+      expect(formats).toHaveProperty('jpeg');
+      expect(formats).toHaveProperty('png');
+      expect(formats).toHaveProperty('webp');
+      expect(typeof formats.jpeg).toBe('boolean');
+      expect(typeof formats.png).toBe('boolean');
+      expect(typeof formats.webp).toBe('boolean');
+    });
+
+    test('should check format support', () => {
+      const colorSplash = new ColorSplash();
+
+      expect(typeof colorSplash.isFormatSupported('png')).toBe('boolean');
+      expect(typeof colorSplash.isFormatSupported('jpeg')).toBe('boolean');
+      expect(colorSplash.isFormatSupported('unknown')).toBe(false);
+    });
+
+    test('should handle file loading errors gracefully', async () => {
+      const colorSplash = new ColorSplash();
+
+      // Mock Image that fails to load
+      global.Image = class {
+        onload: (() => void) | null = null;
+        onerror: (() => void) | null = null;
+        src = '';
+
+        constructor() {
+          setTimeout(() => {
+            if (this.onerror) this.onerror();
+          }, 10);
+        }
+      } as any;
+
+      const mockFile = createMockFile('test.png', 'image/png') as File;
+
+      await expect(colorSplash.loadFromFile(mockFile)).rejects.toThrow();
+    });
+
+    test('should dispose file I/O resources', () => {
+      const colorSplash = new ColorSplash();
+
+      expect(() => colorSplash.dispose()).not.toThrow();
+    });
+  });
+
   describe('GPU Acceleration', () => {
     // Mock canvas for testing
     const createMockCanvas = () => ({

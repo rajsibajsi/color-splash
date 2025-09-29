@@ -36,5 +36,18 @@ export {
 // Export main ColorSplash class
 export { ColorSplash } from './core/ColorSplash';
 
+// Export file I/O functionality
+export {
+  FileIOBackend,
+  loadImageFromFile,
+  loadImageFromUrl,
+  loadImageFromBase64,
+  saveImageAsBlob,
+  saveImageAsBase64,
+  type FileFormatSupport,
+  type ImageLoadOptions,
+  type ImageSaveOptions,
+} from './core/file-io-backend';
+
 // Export WebGL backend for advanced users
 export { WebGLBackend } from './core/webgl-backend';

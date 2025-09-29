@@ -45,13 +45,11 @@ export class WebGLBackend {
       this.gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
 
       if (!this.gl) {
-        console.warn('WebGL not supported');
         return false;
       }
 
       // Check for required extensions
       if (!this.checkExtensions()) {
-        console.warn('Required WebGL extensions not available');
         return false;
       }
 
@@ -64,7 +62,6 @@ export class WebGLBackend {
       this.isInitialized = true;
       return true;
     } catch (error) {
-      console.error('Failed to initialize WebGL backend:', error);
       return false;
     }
   }
@@ -78,7 +75,7 @@ export class WebGLBackend {
     // Check for OES_texture_float for better precision
     const floatTextureExt = this.gl.getExtension('OES_texture_float');
     if (!floatTextureExt) {
-      console.warn('OES_texture_float extension not available');
+      // OES_texture_float extension not available, continuing without it
     }
 
     return true;
