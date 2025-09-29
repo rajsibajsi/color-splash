@@ -13,6 +13,7 @@ import {
   SelectionArea,
 } from '../types';
 import { applyColorSplash } from './image-processing';
+import { isColorSimilar } from '../algorithms/color-similarity';
 import {
   calculateOptimalPreviewSize,
   resizeImageData,
@@ -592,51 +593,114 @@ export class ColorSplash {
     // Create alpha mask for the selection area
     const alphaMask = this.areaProcessor.createAlphaMask(imageData.width, imageData.height, area);
 
-    // Apply color splash to the entire image
-    const splashedImage = await this.applyColorSplash(imageData, config);
+    // Start with the original image
+    const result = new ImageData(
+      new Uint8ClampedArray(imageData.data),
+      imageData.width,
+      imageData.height
+    );
 
-    // Blend the splashed image with the original based on selection mask
-    const result = new ImageData(imageData.width, imageData.height);
-
+    // Process all pixels
     for (let i = 0; i < imageData.data.length; i += 4) {
       const pixelIndex = Math.floor(i / 4);
       const alpha = alphaMask[pixelIndex]!;
 
-      if (alpha === 1) {
-        // Fully inside selection - use splashed version
-        result.data[i] = splashedImage.data[i]!; // R
-        result.data[i + 1] = splashedImage.data[i + 1]!; // G
-        result.data[i + 2] = splashedImage.data[i + 2]!; // B
-        result.data[i + 3] = splashedImage.data[i + 3]!; // A
-      } else if (alpha === 0) {
-        // Fully outside selection - use original
-        result.data[i] = imageData.data[i]!; // R
-        result.data[i + 1] = imageData.data[i + 1]!; // G
-        result.data[i + 2] = imageData.data[i + 2]!; // B
-        result.data[i + 3] = imageData.data[i + 3]!; // A
+      const originalR = imageData.data[i]!;
+      const originalG = imageData.data[i + 1]!;
+      const originalB = imageData.data[i + 2]!;
+
+      if (alpha === 0) {
+        // Outside selection area - convert everything to grayscale
+        const gray = this.toGrayscale(originalR, originalG, originalB, config.grayscaleMethod);
+        result.data[i] = gray;
+        result.data[i + 1] = gray;
+        result.data[i + 2] = gray;
       } else {
-        // Feathered edge - blend between original and splashed
-        const originalR = imageData.data[i]!;
-        const originalG = imageData.data[i + 1]!;
-        const originalB = imageData.data[i + 2]!;
-        const originalA = imageData.data[i + 3]!;
+        // Inside selection area (alpha > 0) - apply color splash effect
+        const pixelColor = { r: originalR, g: originalG, b: originalB };
+        let preserveColor = false;
 
-        const splashedR = splashedImage.data[i]!;
-        const splashedG = splashedImage.data[i + 1]!;
-        const splashedB = splashedImage.data[i + 2]!;
-        const splashedA = splashedImage.data[i + 3]!;
+        // Check if this pixel matches any target color
+        for (const targetColor of config.targetColors) {
+          if (
+            this.isColorSimilarHelper(
+              pixelColor,
+              targetColor,
+              config.tolerance,
+              config.colorSpace || this.options.defaultColorSpace
+            )
+          ) {
+            preserveColor = true;
+            break;
+          }
+        }
+        if (preserveColor) {
+          // Preserve target color
+          if (alpha === 1) {
+            // Fully inside selection - explicitly keep original color
+            result.data[i] = originalR;
+            result.data[i + 1] = originalG;
+            result.data[i + 2] = originalB;
+            // Keep original alpha (already copied)
+          } else {
+            // Feathered edge - blend between grayscale (outside) and color (inside)
+            const gray = this.toGrayscale(originalR, originalG, originalB, config.grayscaleMethod);
+            result.data[i] = Math.round(gray * (1 - alpha) + originalR * alpha);
+            result.data[i + 1] = Math.round(gray * (1 - alpha) + originalG * alpha);
+            result.data[i + 2] = Math.round(gray * (1 - alpha) + originalB * alpha);
+          }
+        } else {
+          // Non-target color inside selection - convert to grayscale
+          const gray = this.toGrayscale(originalR, originalG, originalB, config.grayscaleMethod);
 
-        const alphaValue = alphaMask[pixelIndex]!;
-
-        result.data[i] = Math.round(originalR * (1 - alphaValue) + splashedR * alphaValue);
-        result.data[i + 1] = Math.round(originalG * (1 - alphaValue) + splashedG * alphaValue);
-        result.data[i + 2] = Math.round(originalB * (1 - alphaValue) + splashedB * alphaValue);
-        result.data[i + 3] = Math.round(originalA * (1 - alphaValue) + splashedA * alphaValue);
+          if (alpha === 1) {
+            // Fully inside selection - use grayscale
+            result.data[i] = gray;
+            result.data[i + 1] = gray;
+            result.data[i + 2] = gray;
+          } else {
+            // Feathered edge - blend between grayscale (outside) and grayscale (inside)
+            // In this case, both are grayscale, so just use grayscale
+            result.data[i] = gray;
+            result.data[i + 1] = gray;
+            result.data[i + 2] = gray;
+          }
+        }
       }
     }
 
     endTimer();
     return result;
+  }
+
+  /**
+   * Helper method to check if colors are similar
+   */
+  private isColorSimilarHelper(
+    color1: Color,
+    color2: Color,
+    tolerance: ColorTolerance,
+    colorSpace: ColorSpace
+  ): boolean {
+    return isColorSimilar(color1, color2, tolerance, colorSpace);
+  }
+
+  /**
+   * Helper method to convert RGB to grayscale
+   */
+  private toGrayscale(r: number, g: number, b: number, method?: GrayscaleMethod): number {
+    const grayscaleMethod = method || GrayscaleMethod.LUMINANCE;
+
+    switch (grayscaleMethod) {
+      case GrayscaleMethod.LUMINANCE:
+        return Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+      case GrayscaleMethod.AVERAGE:
+        return Math.round((r + g + b) / 3);
+      case GrayscaleMethod.DESATURATION:
+        return Math.round((Math.max(r, g, b) + Math.min(r, g, b)) / 2);
+      default:
+        return Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+    }
   }
 
   /**
