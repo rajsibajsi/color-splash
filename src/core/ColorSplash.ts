@@ -593,7 +593,6 @@ export class ColorSplash {
     // Create alpha mask for the selection area
     const alphaMask = this.areaProcessor.createAlphaMask(imageData.width, imageData.height, area);
 
-
     // Start with the original image
     const result = new ImageData(
       new Uint8ClampedArray(imageData.data),
@@ -602,16 +601,9 @@ export class ColorSplash {
     );
 
     // Process all pixels
-    let preservedPixelCount = 0;
-    let insideSelectionCount = 0;
-
     for (let i = 0; i < imageData.data.length; i += 4) {
       const pixelIndex = Math.floor(i / 4);
       const alpha = alphaMask[pixelIndex]!;
-
-      if (alpha > 0) {
-        insideSelectionCount++;
-      }
 
       const originalR = imageData.data[i]!;
       const originalG = imageData.data[i + 1]!;
@@ -630,15 +622,19 @@ export class ColorSplash {
 
         // Check if this pixel matches any target color
         for (const targetColor of config.targetColors) {
-          if (this.isColorSimilarHelper(pixelColor, targetColor, config.tolerance, config.colorSpace || this.options.defaultColorSpace)) {
+          if (
+            this.isColorSimilarHelper(
+              pixelColor,
+              targetColor,
+              config.tolerance,
+              config.colorSpace || this.options.defaultColorSpace
+            )
+          ) {
             preserveColor = true;
             break;
           }
         }
-
-
         if (preserveColor) {
-          preservedPixelCount++;
           // Preserve target color
           if (alpha === 1) {
             // Fully inside selection - explicitly keep original color
@@ -673,7 +669,6 @@ export class ColorSplash {
       }
     }
 
-
     endTimer();
     return result;
   }
@@ -681,7 +676,12 @@ export class ColorSplash {
   /**
    * Helper method to check if colors are similar
    */
-  private isColorSimilarHelper(color1: Color, color2: Color, tolerance: ColorTolerance, colorSpace: ColorSpace): boolean {
+  private isColorSimilarHelper(
+    color1: Color,
+    color2: Color,
+    tolerance: ColorTolerance,
+    colorSpace: ColorSpace
+  ): boolean {
     return isColorSimilar(color1, color2, tolerance, colorSpace);
   }
 

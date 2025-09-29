@@ -50,23 +50,22 @@ export class WebGLBackend {
         premultipliedAlpha: true,
         preserveDrawingBuffer: false,
         powerPreference: 'default' as WebGLPowerPreference,
-        failIfMajorPerformanceCaveat: false
+        failIfMajorPerformanceCaveat: false,
       };
 
       // Try WebGL2 first, fall back to WebGL1
       this.gl = (canvas.getContext('webgl2', contextAttributes) ||
-                 canvas.getContext('webgl', contextAttributes) ||
-                 canvas.getContext('experimental-webgl', contextAttributes)) as WebGL2RenderingContext | WebGLRenderingContext | null;
+        canvas.getContext('webgl', contextAttributes) ||
+        canvas.getContext('experimental-webgl', contextAttributes)) as
+        | WebGL2RenderingContext
+        | WebGLRenderingContext
+        | null;
 
       if (!this.gl) {
-        console.error('WebGL: Failed to get WebGL context');
         return false;
       }
-
-
       // Check for required extensions
       if (!this.checkExtensions()) {
-        console.error('WebGL: Required extensions not available');
         return false;
       }
 
@@ -79,7 +78,6 @@ export class WebGLBackend {
       this.isInitialized = true;
       return true;
     } catch (error) {
-      console.error('WebGL: Initialization failed:', error);
       return false;
     }
   }
@@ -266,7 +264,9 @@ export class WebGLBackend {
     if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
       const error = this.gl.getShaderInfoLog(shader);
       const shaderType = type === this.gl.VERTEX_SHADER ? 'vertex' : 'fragment';
+      // eslint-disable-next-line no-console
       console.error(`WebGL: ${shaderType} shader compilation failed:`, error);
+      // eslint-disable-next-line no-console
       console.error(`WebGL: ${shaderType} shader source:`, source);
       this.gl.deleteShader(shader);
       throw new Error(`${shaderType} shader compilation failed: ${error}`);
@@ -314,10 +314,22 @@ export class WebGLBackend {
 
     const vertices = new Float32Array([
       // Position (x,y), TexCoord (u,v)
-      -1, -1,  0, 0,  // Bottom-left
-       1, -1,  1, 0,  // Bottom-right
-      -1,  1,  0, 1,  // Top-left
-       1,  1,  1, 1   // Top-right
+      -1,
+      -1,
+      0,
+      0, // Bottom-left
+      1,
+      -1,
+      1,
+      0, // Bottom-right
+      -1,
+      1,
+      0,
+      1, // Top-left
+      1,
+      1,
+      1,
+      1, // Top-right
     ]);
 
     this.quadBuffer = this.gl.createBuffer();
