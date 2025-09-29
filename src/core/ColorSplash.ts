@@ -220,8 +220,7 @@ export class ColorSplash {
         return result;
       }
     } catch (error) {
-      console.warn('GPU acceleration failed, falling back to CPU:', error);
-      // Fall through to CPU implementation
+      // Fall through to CPU implementation when GPU acceleration fails
     }
 
     // Fallback to CPU implementation
@@ -278,7 +277,6 @@ export class ColorSplash {
         return false;
       }
     } catch (error) {
-      console.error('GPU acceleration initialization failed:', error);
       this.webglBackend = null;
       this.options.gpuAcceleration = false;
       endTimer();
