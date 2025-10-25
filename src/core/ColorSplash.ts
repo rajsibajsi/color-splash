@@ -4,28 +4,28 @@
 
 import { isColorSimilar } from '../algorithms/color-similarity';
 import {
-    Color,
-    ColorSpace,
-    ColorSplashOptions,
-    ColorTolerance,
-    GrayscaleMethod,
-    PreviewQuality,
-    SelectionArea,
-    SplashConfig,
+  Color,
+  ColorSpace,
+  ColorSplashOptions,
+  ColorTolerance,
+  GrayscaleMethod,
+  PreviewQuality,
+  SelectionArea,
+  SplashConfig,
 } from '../types';
 import { SelectionAreaProcessor } from './area-processor';
 import {
-    FileFormatSupport,
-    FileIOBackend,
-    ImageLoadOptions,
-    ImageSaveOptions,
+  FileFormatSupport,
+  FileIOBackend,
+  ImageLoadOptions,
+  ImageSaveOptions,
 } from './file-io-backend';
 import { applyColorSplash, convertToGrayscale } from './image-processing';
 import {
-    calculateOptimalPreviewSize,
-    PerformanceMonitor,
-    PreviewCache,
-    resizeImageData,
+  calculateOptimalPreviewSize,
+  PerformanceMonitor,
+  PreviewCache,
+  resizeImageData,
 } from './performance-optimization';
 import { WebGLBackend } from './webgl-backend';
 
