@@ -2,32 +2,32 @@
  * Main ColorSplash class - Unified API for color splash effects
  */
 
-import {
-  Color,
-  ColorTolerance,
-  ColorSpace,
-  GrayscaleMethod,
-  PreviewQuality,
-  ColorSplashOptions,
-  SplashConfig,
-  SelectionArea,
-} from '../types';
-import { applyColorSplash } from './image-processing';
 import { isColorSimilar } from '../algorithms/color-similarity';
 import {
-  calculateOptimalPreviewSize,
-  resizeImageData,
-  PreviewCache,
-  PerformanceMonitor,
-} from './performance-optimization';
-import {
-  FileIOBackend,
-  ImageLoadOptions,
-  ImageSaveOptions,
-  FileFormatSupport,
-} from './file-io-backend';
-import { WebGLBackend } from './webgl-backend';
+    Color,
+    ColorSpace,
+    ColorSplashOptions,
+    ColorTolerance,
+    GrayscaleMethod,
+    PreviewQuality,
+    SelectionArea,
+    SplashConfig,
+} from '../types';
 import { SelectionAreaProcessor } from './area-processor';
+import {
+    FileFormatSupport,
+    FileIOBackend,
+    ImageLoadOptions,
+    ImageSaveOptions,
+} from './file-io-backend';
+import { applyColorSplash, convertToGrayscale } from './image-processing';
+import {
+    calculateOptimalPreviewSize,
+    PerformanceMonitor,
+    PreviewCache,
+    resizeImageData,
+} from './performance-optimization';
+import { WebGLBackend } from './webgl-backend';
 
 export class ColorSplash {
   private options: Required<ColorSplashOptions>;
@@ -338,9 +338,7 @@ export class ColorSplash {
     imageData: ImageData,
     method: GrayscaleMethod = GrayscaleMethod.LUMINANCE
   ): ImageData {
-    // Import dynamically to avoid circular dependency
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { convertToGrayscale } = require('./image-processing');
+    // Fixed: The standalone convertToGrayscale function is already in this bundle
     return convertToGrayscale(imageData, method);
   }
 
